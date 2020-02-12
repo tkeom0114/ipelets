@@ -4,6 +4,8 @@
 #include "ipepath.h"
 #include "ipepage.h"
 #include "ipereference.h"
+#include "libs.h"
+#include "point.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -23,19 +25,9 @@ public:
 //user defined functions for graham algorithm
 //you can use independent class for algorithm
 private:
-	vector<Vector> triangle;
-	vector<Vector> polygon;
+	vector<Point> triangle;
+	vector<Point> polygon;
 };
-
-void setVectors(vector<Vector> &polygon, Curve const *curve)
-{
-	polygon.clear();
-	polygon.push_back(curve->segment(0).cp(0));
-	for (int i = 0; i < curve->countSegments(); i++)
-	{
-		polygon.push_back(curve->segment(i).last());
-	}
-}
 
 
 bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
@@ -71,7 +63,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 			{
 				if (getTriangle)
 				{
-					helper->message("Triangle is already exist");
+					helper->message("Triangle is already selected");
 					return false;
 				}
 				setVectors(triangle, curve);
@@ -81,7 +73,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 			{
 				if (getPolygon)
 				{
-					helper->message("Polygon is already exist");
+					helper->message("Polygon is already selected");
 					return false;
 				}
 				setVectors(polygon, curve);
@@ -90,11 +82,11 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 		}
 	}
 	//matrix of linear transformation from right isosceles triangle to input triangle
-	Linear m(triangle[1].x - triangle[0].x, triangle[1].y - triangle[0].y,
-			triangle[2].x - triangle[0].x, triangle[2].y - triangle[0].y);
+	Linear m(triangle[1].v.x - triangle[0].v.x, triangle[1].v.y - triangle[0].v.y,
+			triangle[2].v.x - triangle[0].v.x, triangle[2].v.y - triangle[0].v.y);
 	//linear transformation of the polygon
-	for (int i = 0; i < polygon.size(); i++)
-		polygon[i] = m.inverse() * polygon[i];
+	for (size_t i = 0; i < polygon.size(); i++)
+		polygon[i].v = m.inverse() * polygon[i].v;
 	
 
 	return true;
