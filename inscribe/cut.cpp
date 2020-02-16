@@ -45,7 +45,7 @@ vector<EPair> slicing(vector<Point> polygon)
     }
     Edge e(n-1, polygon[n-1].v, polygon[0].v);
     sort(polygon.begin(), polygon.end());
-    vector<EPair> edgePairs;
+    vector<EPair> edgePairs, tempPairs;
     set<EPair, Compare> intersectPairs;
     queue<Point> tempPoints;
     for (size_t i = 0; i < n; i++)
@@ -65,46 +65,47 @@ vector<EPair> slicing(vector<Point> polygon)
                 if(tempPoints.empty()) break;
                 dist = (q.index + n - tempPoints.front().index) % n;
             } while (dist == 1 || dist == n-1);
-            vector<EPair> tempPairs;
+            vector<EPair> surroundPairs;
             Edge e(0, p.v, p.v);
             pair<set<EPair>::iterator, set<EPair>::iterator> iterPair = intersectPairs.equal_range(pair(e,e));
             for (set<EPair>::iterator it = iterPair.first; it != iterPair.second; it++)
             {
-                tempPairs.push_back(*it);
+                surroundPairs.push_back(*it);
             }
-            switch (tempPairs.size())
+            switch (surroundPairs.size())
             {
             //create
             case 0:
                 if (p == q)
                 {
-                    intersectPairs.emplace(pair(std::min(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n]), 
+                    tempPairs.push_back(pair(std::min(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n]), 
                                                 std::max(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n])));
                 }
                 else if (dist == 1)
                 {
-                    intersectPairs.emplace(pair(polygonEdges[(p.index + n -1) % n], polygonEdges[q.index]));
+                    tempPairs.push_back(pair(polygonEdges[(p.index + n -1) % n], polygonEdges[q.index]));
                 }
                 else if (dist == n - 1)
                 {
-                    intersectPairs.emplace(pair(polygonEdges[p.index], polygonEdges[(q.index + n -1) % n]));
+                    tempPairs.push_back(pair(polygonEdges[p.index], polygonEdges[(q.index + n -1) % n]));
                 }
                 
                 break;
-            //cut or split
+            //cut or split or delete
             case 1:
-                if (p == q)
+                //delete
+                if ((surroundPairs[0].first.seg.iQ == p.v && surroundPairs[0].second.seg.iQ == q.v) ||
+                    (surroundPairs[0].first.seg.iQ == q.v && surroundPairs[0].second.seg.iQ == p.v))
                 {
-
+                    edgePairs.push_back(surroundPairs[0]);
+                    intersectPairs.erase(surroundPairs[0]);
                 }
-                else if (dist == 1)
-                {
-
-                }
-                else if (dist == n - 1)
+                //cut upper edge
+                else if (surroundPairs[0].first.seg.iQ == p.v)
                 {
                     
                 }
+
                 break;
             //merge
             case 2:
@@ -126,9 +127,11 @@ vector<EPair> slicing(vector<Point> polygon)
                 break;
             }
         }
+        for (auto &&pair : tempPairs)
+        {
+            intersectPairs.emplace(pair);
+        }
+        tempPairs.clear(); 
     }
-    
-
-
     return edgePairs;
 }
