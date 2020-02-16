@@ -1,3 +1,6 @@
+#ifndef LIBS_H
+#define LIBS_H
+
 #include "ipelet.h"
 #include "ipepath.h"
 #include "ipepage.h"
@@ -10,3 +13,5 @@ using namespace ipe;
 using namespace std;
 
 void setVectors(vector<Point> &polygon, Curve const *curve);
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef POINT_H
+#define POINT_H
+
 #include "ipelet.h"
 #include "ipepath.h"
 #include "ipepage.h"
@@ -21,7 +24,9 @@ public:
     Vector v;
 public:
     Point(int _index, Vector _v);
+    Point();
     inline bool operator<(const Point rhs) const;
+    inline bool operator==(const Point rhs) const;
 };
 
 Point::Point(int _index, Vector _v)
@@ -42,3 +47,9 @@ inline bool Point::operator<(const Point rhs) const
     }
 }
 
+inline bool Point::operator==(const Point rhs) const
+{
+    return this->v == rhs.v;
+}
+
+#endif
