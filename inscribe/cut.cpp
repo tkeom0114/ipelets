@@ -34,6 +34,18 @@ bool Compare::operator()(const EPair& a, const EPair& b) const
     return a.second < b.first;
 }
 
+vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
+{
+    vector<EPair> surroundPairs;
+    Edge e(0, q.v, q.v);
+    pair<set<EPair>::iterator, set<EPair>::iterator> iterPair = intersectPairs.equal_range(pair(e,e));
+    for (set<EPair>::iterator it = iterPair.first; it != iterPair.second; it++)
+    {
+        surroundPairs.push_back(*it);
+    }
+    return surroundPairs;
+}
+
 vector<EPair> slicing(vector<Point> polygon)
 {
     vector<Edge> polygonEdges;
@@ -52,6 +64,7 @@ vector<EPair> slicing(vector<Point> polygon)
     {
         tempPoints.push(polygon[i]);
         if (i < n - 1 && ipe::abs(polygon[i+1].v.x - polygon[i].v.x) < EPS ) continue;
+        Segment *prevSeg = NULL;
         while (!tempPoints.empty())
         {
             //compute vertical segment pg(p:bottom q: top)
@@ -65,14 +78,9 @@ vector<EPair> slicing(vector<Point> polygon)
                 if(tempPoints.empty()) break;
                 dist = (q.index + n - tempPoints.front().index) % n;
             } while (dist == 1 || dist == n-1);
-            vector<EPair> surroundPairs;
-            Edge e(0, p.v, p.v);
-            pair<set<EPair>::iterator, set<EPair>::iterator> iterPair = intersectPairs.equal_range(pair(e,e));
-            for (set<EPair>::iterator it = iterPair.first; it != iterPair.second; it++)
-            {
-                surroundPairs.push_back(*it);
-            }
-            switch (surroundPairs.size())
+            vector<EPair> surroundPairsP = surroundPairs(p, intersectPairs);
+            vector<EPair> surroundPairsQ = surroundPairs(q, intersectPairs);
+            switch (surroundPairsQ.size())
             {
             //create
             case 0:
@@ -94,14 +102,13 @@ vector<EPair> slicing(vector<Point> polygon)
             //cut or split or delete
             case 1:
                 //delete
-                if ((surroundPairs[0].first.seg.iQ == p.v && surroundPairs[0].second.seg.iQ == q.v) ||
-                    (surroundPairs[0].first.seg.iQ == q.v && surroundPairs[0].second.seg.iQ == p.v))
+                if ((surroundPairsQ[0].first.seg.iQ == p.v && surroundPairsQ[0].second.seg.iQ == q.v) ||
+                    (surroundPairsQ[0].first.seg.iQ == q.v && surroundPairsQ[0].second.seg.iQ == p.v))
                 {
-                    edgePairs.push_back(surroundPairs[0]);
-                    intersectPairs.erase(surroundPairs[0]);
+                    edgePairs.push_back(surroundPairsQ[0]);
                 }
                 //cut upper edge
-                else if (surroundPairs[0].first.seg.iQ == p.v)
+                else if (surroundPairsQ[0].first.seg.iQ == p.v)
                 {
                     
                 }
