@@ -142,7 +142,13 @@ vector<EPair> slicing(vector<Point> polygon)
             {
                 if (!surroundPairsQ.empty() && ql < surroundPairsQ.back().second)
                 {
-
+                    Vector r;
+                    Vector dir(0.0, 1.0);
+                    Line l(q.v, dir);
+                    if (!surroundPairsQ.back().second.seg.intersects(l, r)) exit(-2);
+                    tempPairs.push_back(pair(*prevEdge, Edge(surroundPairsQ.back().second.index, r, surroundPairsQ.back().second.seg.iQ)));
+                    edgePairs.push_back(pair(surroundPairsQ.back().first, Edge(surroundPairsQ.back().second.index, surroundPairsQ.back().second.seg.iP, r)));
+                    intersectPairs.erase(surroundPairsQ.back());
                 }
                 else
                 {
