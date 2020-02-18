@@ -29,6 +29,7 @@ inline bool Edge::operator<(const Edge &rhs) const
     }
 }
 
+
 bool Compare::operator()(const EPair& a, const EPair& b) const
 {
     return a.second < b.first;
@@ -71,6 +72,8 @@ vector<EPair> slicing(vector<Point> polygon)
         {
             //compute vertical segment pg(p:bottom q: top)
             p = tempPoints.front();
+            Edge pl(0, p.v, p.v);
+            Edge ql(0, q.v, q.v);
             do
             {
                 q = tempPoints.front();
@@ -83,25 +86,13 @@ vector<EPair> slicing(vector<Point> polygon)
             //create prevEdge if not exist
             if (prevEdge == NULL)
             {
-                if (surroundPairsP.empty() && surroundPairsQ.empty())
+                if (surroundPairsP.empty())
                 {
                     if (p == q)
                     {
-                        tempPairs.push_back(pair(std::min(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n]), 
-                                                std::max(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n])));
+                        prevEdge = (polygonEdges[p.index] < polygonEdges[(p.index + n -1) % n])? &polygonEdges[p.index]:&polygonEdges[(p.index + n -1) % n];
                     }
                     else if (dist == 1)
-                    {
-                        tempPairs.push_back(pair(polygonEdges[(p.index + n -1) % n], polygonEdges[q.index]));
-                    }
-                    else if (dist == n - 1)
-                    {
-                        tempPairs.push_back(pair(polygonEdges[p.index], polygonEdges[(q.index + n -1) % n]));
-                    }
-                }
-                else if (surroundPairsP.empty())
-                {
-                    if (dist == 1)
                     {
                         prevEdge = &polygonEdges[(p.index+n-1)%n];
                     }
@@ -114,37 +105,49 @@ vector<EPair> slicing(vector<Point> polygon)
                         exit(-3); //BUG3
                     }
                 }
-                else if (surroundPairsQ.empty() || surroundPairsP.front().second < surroundPairsQ.back().first)
+                else if (surroundPairsP.front().first < pl)
                 {
-                    edgePairs.push_back(surroundPairsP.front());
-                    intersectPairs.erase(surroundPairsP.front());
                     Vector r;
                     Vector dir(0.0, 1.0);
                     Line l(p.v, dir);
                     if (!surroundPairsP.front().first.seg.intersects(l, r)) exit(-2);
                     prevEdge = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
-                }
-                else if (surroundPairsP.front().second < surroundPairsQ.back().first)
-                {
-                    edgePairs.push_back(surroundPairsP.front());
-                    intersectPairs.erase(surroundPairsP.front());
-                }
-                
-                
+                }                
             }
             //create vertical edgePair and erase prevEdge
             if (prevEdge != NULL)
             {
-                /* code */
+                
             }
-            //create prevEdge for next loop
+            //create prevEdge from q
+
+            //erase edgePair from intersectPairs and insert to edgePairs
+            if (surroundPairsP.front().second.seg.iQ == p.v || surroundPairsQ.back().second.seg.iQ == q.v)
+            {
+                edgePairs.push_back(surroundPairsP.front());
+                intersectPairs.erase(surroundPairsP.front());
+            }
             
-            
+            //make pair at the end
+            Edge fl(0, q.v, q.v);
+            if (!tempPoints.empty())
+            {
+                Segment fs(tempPoints.front().v, tempPoints.front().v);
+                fl.seg = fs;
+            } 
+            if (prevEdge != NULL && (tempPoints.empty() || surroundPairsQ.empty() || surroundPairsQ.back().second < fl))
+            {
+                if (!surroundPairsQ.empty() && ql < surroundPairsQ.back().second)
+                {
+                    /* code */
+                }
+                else
+                {
+                    /* code */
+                }      
+                prevEdge == NULL;
+            }
         } while (!tempPoints.empty());
-        if (prevEdge != NULL)
-        {
-            /* code */
-        }
         for (auto &&pair : tempPairs)
         {
             intersectPairs.emplace(pair);
