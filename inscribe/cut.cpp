@@ -112,6 +112,10 @@ vector<EPair> slicing(vector<Point> polygon)
                     Line l(p.v, dir);
                     if (!surroundPairsP.front().first.seg.intersects(l, r)) exit(-2);
                     prevEdge = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
+                    intersectPairs.erase(surroundPairsP.front());
+                    Edge newpe(surroundPairsP.front().first.index, surroundPairsP.front().first.seg.iP, r);
+                    intersectPairs.insert(pair(newpe, surroundPairsP.front().second));
+                    surroundPairsP.front().first = newpe;
                 }                
             }
             //create vertical edgePair and erase prevEdge
@@ -127,7 +131,6 @@ vector<EPair> slicing(vector<Point> polygon)
                 edgePairs.push_back(surroundPairsP.front());
                 intersectPairs.erase(surroundPairsP.front());
             }
-            
             //make pair at the end
             Edge fl(0, q.v, q.v);
             if (!tempPoints.empty())
@@ -139,7 +142,7 @@ vector<EPair> slicing(vector<Point> polygon)
             {
                 if (!surroundPairsQ.empty() && ql < surroundPairsQ.back().second)
                 {
-                    /* code */
+
                 }
                 else
                 {
