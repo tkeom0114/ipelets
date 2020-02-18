@@ -57,20 +57,20 @@ vector<EPair> slicing(vector<Point> polygon)
     }
     Edge e(n-1, polygon[n-1].v, polygon[0].v);
     sort(polygon.begin(), polygon.end());
-    vector<EPair> edgePairs, tempPairs;
+    vector<EPair> edgePairs, tempPairs, surroundPairsP, surroundPairsQ;
     set<EPair, Compare> intersectPairs;
     queue<Point> tempPoints;
     for (size_t i = 0; i < n; i++)
     {
         tempPoints.push(polygon[i]);
         if (i < n - 1 && ipe::abs(polygon[i+1].v.x - polygon[i].v.x) < EPS ) continue;
-        Segment *prevSeg = NULL;
-        while (!tempPoints.empty())
+        Edge *prevEdge = NULL;
+        Point p, q;
+        int dist = 0;
+        do
         {
             //compute vertical segment pg(p:bottom q: top)
-            Point p = tempPoints.front();
-            Point q;
-            int dist = 0;
+            p = tempPoints.front();
             do
             {
                 q = tempPoints.front();
@@ -78,61 +78,72 @@ vector<EPair> slicing(vector<Point> polygon)
                 if(tempPoints.empty()) break;
                 dist = (q.index + n - tempPoints.front().index) % n;
             } while (dist == 1 || dist == n-1);
-            vector<EPair> surroundPairsP = surroundPairs(p, intersectPairs);
-            vector<EPair> surroundPairsQ = surroundPairs(q, intersectPairs);
-            switch (surroundPairsQ.size())
+            surroundPairsP = surroundPairs(p, intersectPairs);
+            surroundPairsQ = surroundPairs(q, intersectPairs);
+            //create prevEdge if not exist
+            if (prevEdge == NULL)
             {
-            //create
-            case 0:
-                if (p == q)
+                if (surroundPairsP.empty() && surroundPairsQ.empty())
                 {
-                    tempPairs.push_back(pair(std::min(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n]), 
+                    if (p == q)
+                    {
+                        tempPairs.push_back(pair(std::min(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n]), 
                                                 std::max(polygonEdges[p.index], polygonEdges[(p.index + n -1) % n])));
+                    }
+                    else if (dist == 1)
+                    {
+                        tempPairs.push_back(pair(polygonEdges[(p.index + n -1) % n], polygonEdges[q.index]));
+                    }
+                    else if (dist == n - 1)
+                    {
+                        tempPairs.push_back(pair(polygonEdges[p.index], polygonEdges[(q.index + n -1) % n]));
+                    }
                 }
-                else if (dist == 1)
+                else if (surroundPairsP.empty())
                 {
-                    tempPairs.push_back(pair(polygonEdges[(p.index + n -1) % n], polygonEdges[q.index]));
+                    if (dist == 1)
+                    {
+                        prevEdge = &polygonEdges[(p.index+n-1)%n];
+                    }
+                    else if (dist == n - 1)
+                    {
+                        prevEdge = &polygonEdges[p.index];
+                    }
+                    else
+                    {
+                        exit(-3); //BUG3
+                    }
                 }
-                else if (dist == n - 1)
+                else if (surroundPairsQ.empty() || surroundPairsP.front().second < surroundPairsQ.back().first)
                 {
-                    tempPairs.push_back(pair(polygonEdges[p.index], polygonEdges[(q.index + n -1) % n]));
+                    edgePairs.push_back(surroundPairsP.front());
+                    intersectPairs.erase(surroundPairsP.front());
+                    Vector r;
+                    Vector dir(0.0, 1.0);
+                    Line l(p.v, dir);
+                    if (!surroundPairsP.front().first.seg.intersects(l, r)) exit(-2);
+                    prevEdge = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
+                }
+                else if (surroundPairsP.front().second < surroundPairsQ.back().first)
+                {
+                    edgePairs.push_back(surroundPairsP.front());
+                    intersectPairs.erase(surroundPairsP.front());
                 }
                 
-                break;
-            //cut or split or delete
-            case 1:
-                //delete
-                if ((surroundPairsQ[0].first.seg.iQ == p.v && surroundPairsQ[0].second.seg.iQ == q.v) ||
-                    (surroundPairsQ[0].first.seg.iQ == q.v && surroundPairsQ[0].second.seg.iQ == p.v))
-                {
-                    edgePairs.push_back(surroundPairsQ[0]);
-                }
-                //cut upper edge
-                else if (surroundPairsQ[0].first.seg.iQ == p.v)
-                {
-                    
-                }
-
-                break;
-            //merge
-            case 2:
-                if (p == q)
-                {
-
-                }
-                else if (dist == 1)
-                {
-
-                }
-                else if (dist == n - 1)
-                {
-                    
-                }
-                break;
-            default:
-                exit(-3); //BUG3
-                break;
+                
             }
+            //create vertical edgePair and erase prevEdge
+            if (prevEdge != NULL)
+            {
+                /* code */
+            }
+            //create prevEdge for next loop
+            
+            
+        } while (!tempPoints.empty());
+        if (prevEdge != NULL)
+        {
+            /* code */
         }
         for (auto &&pair : tempPairs)
         {
