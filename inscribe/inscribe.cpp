@@ -4,11 +4,14 @@
 #include "ipepath.h"
 #include "ipepage.h"
 #include "ipereference.h"
-#include "libs.h"
 #include "point.h"
+#include "libs.h"
+#include "cut.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <set>
+#include <queue>
 
 using namespace ipe;
 using namespace std;
@@ -39,13 +42,13 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 		helper->message("No selection");
 		return false;
 	}
-	int n=page->count();
-	if(n < 2)
+	int numpol=page->count();
+	if(numpol < 2)
 	{
 		helper->message("Select both polygon and triangle");
 		return false;
 	}
-	else if (n > 2)
+	else if (numpol > 2)
 	{
 		helper->message("Too much polygons are selected");
 		return false;
@@ -54,7 +57,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	bool getTriangle = false;
 	bool getPolygon = false;
 	//copy polygon and triangle
-	for (int i=0;i<n;i++)
+	for (int i = 0;i < numpol;i++)
 	{
 		if (page->object(i)->type() == Object::EPath) 
 		{
@@ -85,13 +88,25 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	Linear m(triangle[1].v.x - triangle[0].v.x, triangle[1].v.y - triangle[0].v.y,
 			triangle[2].v.x - triangle[0].v.x, triangle[2].v.y - triangle[0].v.y);
 	//linear transformation of the polygon
-	for (size_t i = 0; i < polygon.size(); i++)
-		polygon[i].v = m.inverse() * polygon[i].v;
-	
-	
+	//for (size_t i = 0; i < polygon.size(); i++)
+	//	polygon[i].v = m.inverse() * polygon[i].v;
+	//slicing start
+	vector<EPair> edgePairs = slicing(polygon);
+	//slicing end
+	cout << edgePairs.size() << endl; // debugging
+	printPair(edgePairs); //debugging
+	for (size_t i = 0; i < edgePairs.size(); i++)
+	{
+		Curve *sp=new Curve;
+		sp->appendSegment(edgePairs[i].first.seg.iQ, edgePairs[i].second.seg.iQ);
+		sp->setClosed(false);
+		Shape shape;
+		shape.appendSubPath(sp);
+		Path *obj = new Path(data->iAttributes, shape);
+		page->append(ESecondarySelected, data->iLayer, obj);
+	}
 	return true;
 }
-
 //do not change this function
 IPELET_DECLARE Ipelet *newIpelet()
 {

@@ -19,25 +19,22 @@ public:
     int index;
     Segment seg;
 public:
-    Edge(int _index, Vector p, Vector q);
-    inline bool operator<(const Edge &rhs) const;
+    Edge(int _index, Vector _p, Vector _q);
+    bool operator<(const Edge &rhs) const;
 };
-
-Edge::Edge(int _index, Vector p, Vector q)
-{
-    index = index;
-    Segment _seg(p,q);
-    seg = _seg;
-}
 
 typedef pair<Edge, Edge> EPair;
 
-vector<EPair> slicing(vector<Point> polygon);
+
+
 
 struct Compare
 {
     bool operator()(const EPair& a, const EPair& b) const;
 };
+
+void printPair(vector<EPair> EdgePairs);
+vector<EPair> slicing(vector<Point> polygon);
 
 
 

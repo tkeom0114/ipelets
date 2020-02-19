@@ -12,6 +12,7 @@
 using namespace ipe;
 using namespace std;
 
+
 void setVectors(vector<Point> &polygon, Curve const *curve);
 
 #endif
