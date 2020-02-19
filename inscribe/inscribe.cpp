@@ -91,7 +91,12 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	//for (size_t i = 0; i < polygon.size(); i++)
 	//	polygon[i].v = m.inverse() * polygon[i].v;
 	//slicing start
-	vector<EPair> edgePairs = slicing(polygon);
+	vector<EPair> edgePairs = slicing(polygon, helper);
+	if (edgePairs.empty())
+	{
+		return false;
+	}
+	
 	//slicing end
 	cout << edgePairs.size() << endl; // debugging
 	printPair(edgePairs); //debugging

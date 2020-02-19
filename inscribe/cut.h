@@ -34,7 +34,7 @@ struct Compare
 };
 
 void printPair(vector<EPair> EdgePairs);
-vector<EPair> slicing(vector<Point> polygon);
+vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper);
 
 
 
