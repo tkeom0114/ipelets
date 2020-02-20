@@ -72,6 +72,7 @@ vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
     return surroundPairs;
 }
 
+//for debugging
 void printPair(vector<EPair> EdgePairs)
 {
 	for (size_t i = 0; i < EdgePairs.size(); i++)	
@@ -86,6 +87,7 @@ void printPair(vector<EPair> EdgePairs)
 	}
 }
 
+//for debugging
 void printEdge(Edge e)
 {
 	cout << "Index:"  << e.index << endl;
@@ -110,14 +112,15 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
     {
         tempPoints.push(polygon[i]);
         if (i < n - 1 && ipe::abs(polygon[i+1].v.x - polygon[i].v.x) < EPS ) continue;
-        Edge *prevEdge = NULL;
+        Edge *prevEdge = nullptr;
+        Edge *edgePointer = nullptr;
         Point *p, *q;    
         do
         {
             //compute vertical segment pg(p:bottom q: top)
             p = &tempPoints.front();
             Edge pl(0, p->v, p->v);
-            q = NULL;
+            q = nullptr;
             int temp = 0, dist = 0;
             do
             {
@@ -135,7 +138,7 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
             surroundPairsP = surroundPairs(*p, intersectPairs);
             surroundPairsQ = surroundPairs(*q, intersectPairs);
             //create prevEdge if not exist
-            if (prevEdge == NULL)
+            if (prevEdge == nullptr)
             {
                 if (surroundPairsP.empty())
                 {
@@ -167,7 +170,8 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                     {
                         r = surroundPairsP.front().first.seg.iQ;
                     }
-                    prevEdge = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
+                    edgePointer = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
+                    prevEdge = edgePointer;
                     intersectPairs.erase(surroundPairsP.front());
                     Edge newpe(surroundPairsP.front().first.index, surroundPairsP.front().first.seg.iP, r);
                     intersectPairs.insert(pair<Edge, Edge>(newpe, surroundPairsP.front().second));
@@ -177,7 +181,7 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                     
                 }
             }
-            if (prevEdge != NULL && !surroundPairsP.empty() && !surroundPairsQ.empty() && 
+            if (prevEdge != nullptr && !surroundPairsP.empty() && !surroundPairsQ.empty() && 
                 surroundPairsP.front().second.seg.iQ == p->v && surroundPairsQ.back().first.seg.iQ == q->v)
             {
                 edgePairs.push_back(surroundPairsP.front());
@@ -244,7 +248,6 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
 					}
                 }
 			}
-            
             //make pair at the end
             Edge fl(0, q->v, q->v);
             if (!tempPoints.empty())
@@ -271,7 +274,7 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                 }
                 else
                 {
-                    if (prevEdge != NULL)
+                    if (prevEdge != nullptr)
                     {
                         if (p == q)
                         {
@@ -329,7 +332,8 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                     }
                     
                 }      
-                prevEdge = NULL;
+                prevEdge = nullptr;
+                if (edgePointer != nullptr) delete edgePointer;
             }        
         } while (!tempPoints.empty());
         for (auto &&pair : tempPairs)
