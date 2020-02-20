@@ -10,12 +10,7 @@ Edge::Edge(int _index, Vector _p, Vector _q)
 }
 
 bool Edge::operator<(const Edge &rhs) const
-{	//debugging
-	//cout << "lhs.iP:" << this->seg.iP.x << " " << this->seg.iP.y << endl; //debugging
-	//cout << "lhs.iQ:" << this->seg.iQ.x << " " << this->seg.iQ.y << endl; //debugging
-	//cout << "rhs.iP:" << rhs.seg.iP.x << " " << rhs.seg.iP.y << endl; //debugging
-	//cout << "rhs.iQ:" << rhs.seg.iQ.x << " " << rhs.seg.iQ.y << endl; //debugging
-	//debugging
+{
 	double alx, aly, arx, ary, blx, bly, brx, bry;
 	if (seg.iP.x < seg.iQ.x)
 	{
@@ -54,12 +49,6 @@ bool Edge::operator<(const Edge &rhs) const
         if (!seg.intersects(lb, lhsb)) cout << "Error!" << endl;
         if (!rhs.seg.intersects(la, rhsa)) cout << "Error!" << endl;
         if (!rhs.seg.intersects(lb, rhsb)) cout << "Error!" << endl;
-		//debugging
-		//cout << "lhsa:" << lhsa.x << " " << lhsa.y << endl; //debugging
-		//cout << "lhsb:" << lhsb.x << " " << lhsb.y << endl; //debugging
-		//cout << "rhsa:" << rhsa.x << " " << rhsa.y << endl; //debugging
-		//cout << "rhsb:" << rhsb.x << " " << rhsb.y << endl; //debugging
-		//debugging
         return (lhsa.y + EPS < rhsa.y && lhsb.y < rhsb.y + EPS) || (lhsa.y < rhsa.y +EPS && lhsb.y + EPS < rhsb.y);
     }
 }
@@ -119,7 +108,6 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
     queue<Point> tempPoints;
     for (size_t i = 0; i < n; i++)
     {
-		cout << "iteration " << i << endl; //debugging
         tempPoints.push(polygon[i]);
         if (i < n - 1 && ipe::abs(polygon[i+1].v.x - polygon[i].v.x) < EPS ) continue;
         Edge *prevEdge = NULL;
@@ -146,11 +134,6 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
 			Edge ql(0, q->v, q->v);
             surroundPairsP = surroundPairs(*p, intersectPairs);
             surroundPairsQ = surroundPairs(*q, intersectPairs);
-			cout << "p:" << p->v.x << " " << p->v.y << endl; // debugging
-			cout << "q:" << q->v.x << " " << q->v.y << endl; // debugging
-			cout << "intersectPairs.size:" << intersectPairs.size() << endl;
-			cout << "surroundPairsP.size:" << surroundPairsP.size() << endl; // debugging
-			cout << "surroundPairsQ.size:" << surroundPairsQ.size() << endl; // debugging
             //create prevEdge if not exist
             if (prevEdge == NULL)
             {
@@ -177,14 +160,12 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                 }
                 else if (surroundPairsP.front().first < pl)
                 {
-					cout << "passed0" << endl; // debugging
                     Vector r;
                     Vector dir(0.0, 1.0);
                     Line l(p->v, dir);
                     if (!surroundPairsP.front().first.seg.intersects(l, r))
                     {
-                        helper->message("Error0");//BUG0
-                        return vector<EPair>();
+                        r = surroundPairsP.front().first.seg.iQ;
                     }
                     prevEdge = new Edge(surroundPairsP.front().first.index, r, surroundPairsP.front().first.seg.iQ);
                     intersectPairs.erase(surroundPairsP.front());
@@ -192,30 +173,24 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                     intersectPairs.insert(pair<Edge, Edge>(newpe, surroundPairsP.front().second));
                     surroundPairsP = surroundPairs(*p, intersectPairs);
 					surroundPairsQ = surroundPairs(*q, intersectPairs);
-                    if (surroundPairsP.front().second.seg.iQ == p->v && surroundPairsQ.back().first.seg.iQ == q->v)
-                    {
-                        edgePairs.push_back(surroundPairsP.front());
-                        cout << "Insert to edgePairs" << endl; // debugging
-                        intersectPairs.erase(surroundPairsP.front());
-                        cout << "Erase from intersectPairs" << endl; // debugging
-                    }
+                    
                     
                 }
+            }
+            if (prevEdge != NULL && !surroundPairsP.empty() && !surroundPairsQ.empty() && 
+                surroundPairsP.front().second.seg.iQ == p->v && surroundPairsQ.back().first.seg.iQ == q->v)
+            {
+                edgePairs.push_back(surroundPairsP.front());
+                intersectPairs.erase(surroundPairsP.front());
             }
             //create vertical edgePair and erase prevEdge(if exist), create prevEdge from q
 			if (!surroundPairsP.empty())
 			{
-				if (surroundPairsP.front().first < pl && pl < surroundPairsP.front().second)
+				if (surroundPairsP.front().first < pl && ql < surroundPairsP.front().second)
 				{
 					if (p == q)
 					{
-						cout << "passed1" << endl; // debugging
 						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, std::min(polygonEdges[p->index], polygonEdges[(p->index + n - 1) % n])));
-                        cout << "Insert to tempPairs" << endl; // debugging
-						cout << "p->index:" << p->index << endl; // debugging
-						cout << (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n]) << endl; // debugging
-						printEdge(polygonEdges[p->index]); //debugging
-						printEdge( polygonEdges[(p->index + n - 1) % n]); //debugging
 						if (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n])
 						{
 							prevEdge = &polygonEdges[(p->index + n - 1) % n];
@@ -228,13 +203,11 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
 					else if (dist == 1)
 					{
 						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n -1) % n]));
-                        cout << "Insert to tempPairs" << endl; // debugging
 						prevEdge = &polygonEdges[q->index];
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
 						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
-                        cout << "Insert to tempPairs" << endl; // debugging
 						prevEdge = &polygonEdges[(q->index + n -1) % n];
 					}
 					else
@@ -276,7 +249,6 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
             Edge fl(0, q->v, q->v);
             if (!tempPoints.empty())
             {
-				cout << "passed3" << endl; // debugging
                 Segment fs(tempPoints.front().v, tempPoints.front().v);
                 fl.seg = fs;
             } 
@@ -284,21 +256,18 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
             {
                 if (!surroundPairsQ.empty() && ql < surroundPairsQ.back().second)
                 {
-					cout << "passed4" << endl; // debugging
                     Vector r;
                     Vector dir(0.0, 1.0);
                     Line l(q->v, dir);
                     if (!surroundPairsQ.back().second.seg.intersects(l, r))
                     {
+                        //r = surroundPairsQ.back().second.seg.iQ;
                         helper->message("Error0");//BUG0
                         return vector<EPair>();
                     }
                     tempPairs.push_back(pair<Edge, Edge>(*prevEdge, Edge(surroundPairsQ.back().second.index, r, surroundPairsQ.back().second.seg.iQ)));
-                    cout << "Insert to tempPairs" << endl; // debugging
                     edgePairs.push_back(pair<Edge, Edge>(surroundPairsQ.back().first, Edge(surroundPairsQ.back().second.index, surroundPairsQ.back().second.seg.iP, r)));
-                    cout << "Insert to edgePairs" << endl; // debugging
                     intersectPairs.erase(surroundPairsQ.back());
-                    cout << "Erase from intersectPairs" << endl; // debugging
                 }
                 else
                 {
@@ -306,21 +275,13 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                     {
                         if (p == q)
                         {
-                            cout << prevEdge->index << endl; // debugging
-                            cout << prevEdge->seg.iQ.x << " " << prevEdge->seg.iQ.y << endl; // debugging
-                            cout << polygonEdges[prevEdge->index].seg.iP.x << " " << polygonEdges[prevEdge->index].seg.iP.y << endl; // debugging 
-                            cout << polygonEdges[prevEdge->index].seg.iQ.x << " " << polygonEdges[prevEdge->index].seg.iQ.y << endl; // debugging 
                             if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iP)
                             {
-                                cout << "passed5" << endl; // debugging
                                 tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
-                                cout << "Insert to tempPairs" << endl; // debugging
                             }
                             else if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iQ)
                             {
-                                cout << "passed6" << endl; // debugging
                                 tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
-                                cout << "Insert to tempPairs" << endl; // debugging
                             }
                             else
                             {
@@ -328,35 +289,49 @@ vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper)
                                 return vector<EPair>();
                             }
                         }
-                        else if (dist == 1)
+                        else if (surroundPairsP.empty() || surroundPairsQ.empty())
                         {
-                            tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
-                            cout << "Insert to tempPairs" << endl; // debugging
-                        }
-                        else if (dist == static_cast<int>(n - 1))
-                        {
-                            tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
-                            cout << "Insert to tempPairs" << endl; // debugging
+                            if (dist == 1)
+                            {
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
+                            }
+                            else if (dist == static_cast<int>(n - 1))
+                            {
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
+                            }
+                            else
+                            {
+                                helper->message("Error5");//BUG5
+                                return vector<EPair>();
+                            }
                         }
                         else
                         {
-                            helper->message("Error5");//BUG5
-                            return vector<EPair>();
-                        }
+                            if (dist == 1)
+                            {
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n - 1) % n]));
+                            }
+                            else if (dist == static_cast<int>(n - 1))
+                            {
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
+                            }
+                            else
+                            {
+                                helper->message("Error6");//BUG6
+                                return vector<EPair>();
+                            }
+                        }     
                     }     
                     if (!surroundPairsP.empty())
                     {
                         edgePairs.push_back(surroundPairsP.front());
-                        cout << "Insert to edgePairs" << endl; // debugging
                         intersectPairs.erase(surroundPairsP.front());
-                        cout << "Erase from intersectPairs" << endl; // debugging
-                    } 
+                    }
                     
                 }      
                 prevEdge = NULL;
             }        
         } while (!tempPoints.empty());
-		printPair(tempPairs); // debugging
         for (auto &&pair : tempPairs)
         {
 			if (pair.first.seg.iP.x > pair.first.seg.iQ.x && pair.second.seg.iP.x > pair.second.seg.iQ.x)
