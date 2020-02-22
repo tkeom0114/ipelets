@@ -26,12 +26,13 @@ public:
 typedef pair<Edge, Edge> EPair;
 
 
-
-
 struct Compare
 {
     bool operator()(const EPair& a, const EPair& b) const;
 };
+
+
+
 
 void printPair(vector<EPair> EdgePairs);
 vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper);

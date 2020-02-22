@@ -7,6 +7,7 @@
 #include "point.h"
 #include "libs.h"
 #include "cut.h"
+#include "compute.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -29,7 +30,7 @@ public:
 //you can use independent class for algorithm
 private:
 	vector<Point> triangle;
-	vector<Point> polygon;
+	Polygon polygon;
 };
 
 
@@ -79,7 +80,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 					helper->message("Polygon is already selected");
 					return false;
 				}
-				setVectors(polygon, curve);
+				polygon.setPoints(curve);
 				getPolygon = true;
 			}
 		}
@@ -88,22 +89,15 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	Linear m(triangle[1].v.x - triangle[0].v.x, triangle[1].v.y - triangle[0].v.y,
 			triangle[2].v.x - triangle[0].v.x, triangle[2].v.y - triangle[0].v.y);
 	//linear transformation of the polygon
-	//for (size_t i = 0; i < polygon.size(); i++)
-	//	polygon[i].v = m.inverse() * polygon[i].v;
-	//slicing start
-	vector<EPair> edgePairs = slicing(polygon, helper);
-	if (edgePairs.empty())
-	{
-		return false;
-	}
-	
-	//slicing end
-	cout << edgePairs.size() << endl; // debugging
-	printPair(edgePairs); //debugging
-	for (size_t i = 0; i < edgePairs.size(); i++)
+	//polygon.transformPoints(m);
+
+	if (!polygon.slicing(helper)) return false;
+
+	//debugging
+	for (size_t i = 0; i < polygon.edgePairs.size(); i++)
 	{
 		Curve *sp=new Curve;
-		sp->appendSegment(edgePairs[i].first.seg.iQ, edgePairs[i].second.seg.iQ);
+		sp->appendSegment(polygon.edgePairs[i].first.seg.iQ, polygon.edgePairs[i].second.seg.iQ); //BUG:possibility of segmentation falut
 		sp->setClosed(false);
 		Shape shape;
 		shape.appendSubPath(sp);
