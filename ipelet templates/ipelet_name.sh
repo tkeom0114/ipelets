@@ -1,11 +1,14 @@
 #! /bin/bash
 #! 작성한 ipelet의 폴더 이름 IPELET_NAME에 넣기
 IPELET_NAME="   "
+DIR_PATH=$(dirname ${BASH_SOURCE})
+BUILD_PATH=${DIR_PATH}"/../../../build/ipelets"
 
-cd  ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}
+cd  ${DIR_PATH}
+make clean IPEPREFIX=/usr/local
 make IPEPREFIX=/usr/local
 cd ~
-cp ~/ipe-7.2.13/build/ipelets/${IPELET_NAME}.so ~
-cp ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}/${IPELET_NAME}.lua ~
+cp ${BUILD_PATH}/${IPELET_NAME}.so ~
+cp ${DIR_PATH}/${IPELET_NAME}.lua ~
 mv ${IPELET_NAME}.* ~/.ipe/ipelets
-cd ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}
+cd ${DIR_PATH}

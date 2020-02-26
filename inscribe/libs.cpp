@@ -11,3 +11,22 @@ void setVectors(vector<Point> &polygon, Curve const *curve)
 		polygon.push_back(p);
 	}
 }
+
+inline double triArea(Vector a, Vector b, Vector c)
+{
+	return (b.x-a.x) * (c.y-a.y) - (c.x-a.x) * (b.y-a.y);
+}
+
+double area(vector<Vector> const &polygon)
+{
+    if (polygon.empty())
+    {
+        return 0.0;
+    }
+    double area = 0.0;
+    for (size_t i = 1; i < polygon.size() - 1; i++)
+    {
+        area += triArea(polygon[0], polygon[i], polygon[i+1]);
+    }
+    return ipe::abs(area);
+}

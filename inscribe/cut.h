@@ -20,6 +20,7 @@ public:
     Segment seg;
 public:
     Edge(int _index, Vector _p, Vector _q);
+    Edge();
     bool operator<(const Edge &rhs) const;
 };
 
@@ -35,7 +36,6 @@ struct Compare
 
 
 void printPair(vector<EPair> EdgePairs);
-vector<EPair> slicing(vector<Point> polygon, IpeletHelper *helper);
 
 
 

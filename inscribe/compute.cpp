@@ -317,12 +317,50 @@ bool Polygon::slicing(IpeletHelper *helper)
 }
 
 
-/*vector<Polygon> Polygon::divide()
+vector<Polygon> Polygon::divide()
 {
-
+    for (auto &&ep : edgePairs)
+    {
+        unsigned long min = std::min(ep.first.index, ep.second.index);
+        unsigned long max = std::max(ep.first.index, ep.second.index);
+        unsigned long dist = std::min(max - min, min + points.size() - max);
+        if (dist >= points.size()/3)
+        {
+            div = Edge(ep.second.index, ep.first.seg.iQ, ep.second.seg.iQ);
+            break;
+        }
+    }
+    return vector<Polygon>();
 }
 
-vector<Vector> Polygon::compute()
+Polygon Polygon::cutting()
 {
+    vector<Vector> points;
+    return Polygon();
+}
+
+
+/*vector<Vector> Polygon::compute()
+{
+    //base case
+    if (edgePairs.size() == 1)
+    {
+
+    }
+    //divide
+    vector<Vector> triangle;
+    double ar = 0.0;
+    for (auto &&polygon : divide())
+    {
+        vector<Vector> temp = polygon.compute();
+        if (ar < area(temp))
+        {
+            triangle.clear();
+            triangle = temp;
+            ar = area(temp);
+        }
+    }
+    //conqure
     
+    return vector<Vector>();
 }*/

@@ -1,10 +1,8 @@
 #! /bin/bash
 IPELET_NAME="inscribe"
-DIR_PATH=$(dirname $(realpath $0))
+DIR_PATH=$(dirname ${BASH_SOURCE})
 BUILD_PATH=${DIR_PATH}"/../../../build/ipelets"
 
-echo "${DIR_PATH}"
-echo "${BUILD_PATH}"
 cd  ${DIR_PATH}
 make clean IPEPREFIX=/usr/local
 make IPEPREFIX=/usr/local

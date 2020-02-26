@@ -14,5 +14,6 @@ using namespace std;
 
 
 void setVectors(vector<Point> &polygon, Curve const *curve);
+double area(vector<Vector> &polygon);
 
 #endif

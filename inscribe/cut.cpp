@@ -9,6 +9,12 @@ Edge::Edge(int _index, Vector _p, Vector _q)
     seg = Segment(_p, _q);
 }
 
+Edge::Edge()
+{
+	index = -1;    
+    seg = Segment();
+}
+
 bool Edge::operator<(const Edge &rhs) const
 {
 	double alx, aly, arx, ary, blx, bly, brx, bry;
