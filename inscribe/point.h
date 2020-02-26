@@ -13,7 +13,7 @@ using namespace std;
 
 namespace 
 {
-    double EPS = 1e-8;
+    double const EPS = 1e-8;
 }
 
 

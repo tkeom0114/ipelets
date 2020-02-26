@@ -1,11 +1,16 @@
 #! /bin/bash
 IPELET_NAME="inscribe"
+DIR_PATH=$(dirname $(realpath $0))
+BUILD_PATH=${DIR_PATH}"/../../../build/ipelets"
 
-cd  ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}
+echo "${DIR_PATH}"
+echo "${BUILD_PATH}"
+cd  ${DIR_PATH}
 make clean IPEPREFIX=/usr/local
 make IPEPREFIX=/usr/local
 cd ~
-cp ~/ipe-7.2.13/build/ipelets/${IPELET_NAME}.so ~
-cp ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}/${IPELET_NAME}.lua ~
+#! cp ~/ipe-7.2.13/build/ipelets/${IPELET_NAME}.so ~
+cp ${BUILD_PATH}/${IPELET_NAME}.so ~
+cp ${DIR_PATH}/${IPELET_NAME}.lua ~
 mv ${IPELET_NAME}.* ~/.ipe/ipelets
-cd ~/ipe-7.2.13/src/ipelets/${IPELET_NAME}
+cd ${DIR_PATH}
