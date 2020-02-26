@@ -9,7 +9,6 @@ cd  ${DIR_PATH}
 make clean IPEPREFIX=/usr/local
 make IPEPREFIX=/usr/local
 cd ~
-#! cp ~/ipe-7.2.13/build/ipelets/${IPELET_NAME}.so ~
 cp ${BUILD_PATH}/${IPELET_NAME}.so ~
 cp ${DIR_PATH}/${IPELET_NAME}.lua ~
 mv ${IPELET_NAME}.* ~/.ipe/ipelets
