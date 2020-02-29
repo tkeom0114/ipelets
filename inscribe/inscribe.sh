@@ -1,6 +1,6 @@
 #! /bin/bash
 IPELET_NAME="inscribe"
-DIR_PATH=$(dirname ${BASH_SOURCE})
+DIR_PATH=$(dirname $(realpath ${BASH_SOURCE}) )
 BUILD_PATH=${DIR_PATH}"/../../../build/ipelets"
 
 cd  ${DIR_PATH}
