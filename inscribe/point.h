@@ -7,6 +7,7 @@
 #include "ipereference.h"
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using namespace ipe;
 using namespace std;
@@ -28,5 +29,8 @@ public:
     bool operator<(const Point rhs) const;
     bool operator==(const Point rhs) const;
 };
+
+typedef pair<Point, Point> PPair;
+void printPair(vector<PPair> PointPairs);
 
 #endif

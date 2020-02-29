@@ -22,3 +22,16 @@ bool Point::operator==(const Point rhs) const
 {
     return this->v == rhs.v;
 }
+
+//for debugging
+void printPair(vector<PPair> PointPairs)
+{
+	for (size_t i = 0; i < PointPairs.size(); i++)	
+	{
+		cout << "pair" << i << endl;
+		cout << "First index:"  << PointPairs[i].first.index << endl;
+		cout << "First vector:"  << PointPairs[i].first.v.x << " " << PointPairs[i].first.v.y << endl;
+		cout << "Second index:"  << PointPairs[i].second.index << endl;
+		cout << "Second vector:"  << PointPairs[i].second.v.x << " " << PointPairs[i].second.v.y << endl;
+	}
+}

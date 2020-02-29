@@ -22,7 +22,9 @@ class Polygon
 public:
     vector<Point> points;
     vector<EPair> edgePairs;
-    Edge div;
+    vector<PPair> vertLines;
+    PPair verDiv;
+    PPair horDiv;
 public:
     Polygon(vector<Point> _points, vector<EPair> _edgePairs);
     Polygon();
@@ -30,8 +32,8 @@ public:
     void setPoints(Curve const *curve);
     void transformPoints(Linear const &l);
     bool slicing(IpeletHelper *helper);
-    vector<Polygon> divide(); //set Edge div in the function
-    Polygon cutting();
+    vector<Polygon> divide(bool horizontal); //set Edge div in the function
+    Polygon cutting(bool horizontal);
     vector<Vector> compute();
 };
 
