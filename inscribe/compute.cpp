@@ -362,14 +362,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
         int dist = std::min(max - min, min + n - max);
         if (dist > temp)
         {
-            if (horizontal)
-            {
-                horDiv = line;
-            }
-            else
-            {
-                verDiv = line;
-            }   
+            (horizontal? horDiv:verDiv) = line;
             break;
         }
     }
