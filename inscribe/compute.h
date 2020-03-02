@@ -22,7 +22,7 @@ class Polygon
 public:
     vector<Point> points;
     vector<EPair> edgePairs;
-    vector<PPair> vertLines;
+    vector<PPair> sliceLines;
     PPair verDiv;
     PPair horDiv;
 public:

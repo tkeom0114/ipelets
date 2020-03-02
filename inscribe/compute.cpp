@@ -51,7 +51,7 @@ vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
 bool Polygon::slicing(IpeletHelper *helper)
 {
     edgePairs.clear();
-    vertLines.clear();
+    sliceLines.clear();
     vector<Edge> polygonEdges;
     size_t n = points.size();
     for (size_t i = 1; i < n; i++)
@@ -293,7 +293,7 @@ bool Polygon::slicing(IpeletHelper *helper)
                 prevEdge = nullptr;
                 if (edgePointer != nullptr) delete edgePointer;
                 if (top && bottom && top->v.y > bottom->v.y)
-                    vertLines.push_back(PPair(*bottom, *top));  
+                    sliceLines.push_back(PPair(*bottom, *top));  
                 if (top != nullptr)
                 {
                     delete top;
@@ -327,9 +327,8 @@ bool Polygon::slicing(IpeletHelper *helper)
         }
         tempPairs.clear(); 
     }
-    //cout << edgePairs.size() << endl; // debugging
-	//printPair(edgePairs); //debugging
-    printPair(vertLines);
+    sort(points.begin(), points.end(), compareIndex);
+    printPair(sliceLines);
     return true;
 }
 
@@ -337,7 +336,7 @@ bool Polygon::slicing(IpeletHelper *helper)
 vector<Polygon> Polygon::divide(bool horizontal)
 {
     unsigned long temp = 0;
-    for (auto &&line : vertLines)
+    for (auto &&line : sliceLines)
     {
         unsigned long min = std::min(line.first.index, line.second.index);
         unsigned long max = std::max(line.first.index, line.second.index);
@@ -345,13 +344,72 @@ vector<Polygon> Polygon::divide(bool horizontal)
         if (dist > temp)
         {
             if (horizontal)
+            {
                 horDiv = line;
+            }
             else
+            {
                 verDiv = line;
+            }   
             break;
         }
     }
-    return vector<Polygon>();
+    unsigned long n = points.size();
+    vector<Polygon> polygons;
+    vector<int> segToPol, slidePol;
+    segToPol.assign(-1, n);
+    unsigned long start = horizontal? horDiv.first.index:verDiv.first.index;
+    start = (start + 1) % n;
+    temp = start;
+    bool touchedPrev = true;
+    Point first(horizontal? horDiv.first:verDiv.first);
+    do
+    {
+        bool touched = horizontal? std::abs(points[temp].v.y - horDiv.first.v.y) < EPS:
+                                std::abs(points[temp].v.x - verDiv.first.v.x) < EPS;
+        if (touchedPrev && !touched)
+        {
+            polygons.push_back(Polygon());
+            slidePol.push_back(first.index);
+            polygons.back().points.push_back(first);  
+        } 
+        if (!touchedPrev) 
+        {
+            segToPol[temp] = polygons.size() - 1;
+            polygons.back().points.push_back(points[temp]);
+            if (!touched && temp == (horizontal)? horDiv.second.index:verDiv.second.index)
+            {
+                first = horizontal? horDiv.second:verDiv.second;
+                first.index = (temp + 1) % n;
+                polygons.back().points.push_back(first);
+                first.index = (temp + n - 1) % n;
+            }
+            else if (!touched && temp == (horizontal)? horDiv.first.index:verDiv.first.index)
+            {
+                first = horizontal? horDiv.first:verDiv.first;
+                first.index = (temp + 1) % n;
+                polygons.back().points.push_back(first);
+                first.index = (temp + n - 1) % n;
+            }
+        }
+        else
+        {
+            first = points[temp];
+        }        
+        touchedPrev = touched || (temp == (horizontal)? horDiv.second.index:verDiv.second.index);
+        temp = (temp + 1) % n;
+    } while (temp != start);
+    for (auto &&line : sliceLines)
+    {
+        
+    }
+    
+    if (horizontal)
+    {
+        /* code */
+    }
+    
+    return polygons;
 }
 
 Polygon Polygon::cutting(bool horizontal)
@@ -361,7 +419,7 @@ Polygon Polygon::cutting(bool horizontal)
 }
 
 
-/*vector<Vector> Polygon::compute()
+vector<Vector> Polygon::compute()
 {
     //base case
     if (edgePairs.size() == 1)
@@ -371,7 +429,7 @@ Polygon Polygon::cutting(bool horizontal)
     //divide
     vector<Vector> triangle;
     double ar = 0.0;
-    for (auto &&polygon : divide())
+    for (auto &&polygon : divide(false))
     {
         vector<Vector> temp = polygon.compute();
         if (ar < area(temp))
@@ -383,5 +441,5 @@ Polygon Polygon::cutting(bool horizontal)
     }
     //conqure
     
-    return vector<Vector>();
-}*/
+    return triangle;
+}

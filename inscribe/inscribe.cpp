@@ -104,10 +104,10 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 		Path *obj = new Path(data->iAttributes, shape);
 		page->append(ESecondarySelected, data->iLayer, obj);
 	}*/
-	for (size_t i = 0; i < polygon.vertLines.size(); i++)
+	for (size_t i = 0; i < polygon.sliceLines.size(); i++)
 	{
 		Curve *sp=new Curve;
-		sp->appendSegment(polygon.vertLines[i].first.v, polygon.vertLines[i].second.v); //BUG:possibility of segmentation falut
+		sp->appendSegment(polygon.sliceLines[i].first.v, polygon.sliceLines[i].second.v); //BUG:possibility of segmentation falut
 		sp->setClosed(false);
 		Shape shape;
 		shape.appendSubPath(sp);

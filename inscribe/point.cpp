@@ -6,6 +6,12 @@ Point::Point(int _index, Vector _v)
     v = _v;
 }
 
+Point::Point()
+{
+    index = -1;
+    v = Vector(0.0, 0.0);
+}
+
 bool Point::operator<(const Point rhs) const
 {
     if (ipe::abs(this->v.x-rhs.v.x) < EPS)
@@ -21,6 +27,11 @@ bool Point::operator<(const Point rhs) const
 bool Point::operator==(const Point rhs) const
 {
     return this->v == rhs.v;
+}
+
+inline bool compareIndex(Point const a, Point const b)
+{
+    return a.index < b.index;
 }
 
 //for debugging
