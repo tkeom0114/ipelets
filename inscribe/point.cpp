@@ -29,7 +29,7 @@ bool Point::operator==(const Point rhs) const
     return this->v == rhs.v;
 }
 
-inline bool compareIndex(Point const a, Point const b)
+bool compareIndex(Point const a, Point const b)
 {
     return a.index < b.index;
 }

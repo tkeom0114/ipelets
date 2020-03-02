@@ -10,6 +10,7 @@ Polygon::Polygon()
 {
     points = vector<Point>();
     edgePairs = vector<EPair>();
+    verDiv = PPair();
 }
 
 Polygon::~Polygon()
@@ -332,15 +333,33 @@ bool Polygon::slicing(IpeletHelper *helper)
     return true;
 }
 
+void Polygon::renumbering()
+{
+    int slice = points[0].index;
+    int n = points.size();
+    for (auto &&point : points)
+        point.index = (point.index + n - slice) % n;
+    for (auto &&line : sliceLines)
+    {
+        line.first.index = (line.first.index + n - slice) % n;
+        line.second.index = (line.second.index + n - slice) % n;
+    }
+    if (verDiv.first.index != -1)
+    {
+        verDiv.first.index = (verDiv.first.index + n - slice) % n;
+        verDiv.second.index = (verDiv.second.index + n - slice) % n;
+    }
+}
 
 vector<Polygon> Polygon::divide(bool horizontal)
 {
-    unsigned long temp = 0;
+    int n = static_cast<int>(points.size());
+    int temp = 0;
     for (auto &&line : sliceLines)
     {
-        unsigned long min = std::min(line.first.index, line.second.index);
-        unsigned long max = std::max(line.first.index, line.second.index);
-        unsigned long dist = std::min(max - min, min + points.size() - max);
+        int min = std::min(line.first.index, line.second.index);
+        int max = std::max(line.first.index, line.second.index);
+        int dist = std::min(max - min, min + n - max);
         if (dist > temp)
         {
             if (horizontal)
@@ -354,15 +373,15 @@ vector<Polygon> Polygon::divide(bool horizontal)
             break;
         }
     }
-    unsigned long n = points.size();
     vector<Polygon> polygons;
     vector<int> segToPol, slidePol;
     segToPol.assign(-1, n);
-    unsigned long start = horizontal? horDiv.first.index:verDiv.first.index;
+    int start = horizontal? horDiv.first.index:verDiv.first.index;
     start = (start + 1) % n;
     temp = start;
     bool touchedPrev = true;
     Point first(horizontal? horDiv.first:verDiv.first);
+    PPair div = (horizontal)? horDiv:verDiv;
     do
     {
         bool touched = horizontal? std::abs(points[temp].v.y - horDiv.first.v.y) < EPS:
@@ -373,20 +392,20 @@ vector<Polygon> Polygon::divide(bool horizontal)
             slidePol.push_back(first.index);
             polygons.back().points.push_back(first);  
         } 
-        if (!touchedPrev) 
+        if (!touchedPrev || !touched) 
         {
             segToPol[temp] = polygons.size() - 1;
             polygons.back().points.push_back(points[temp]);
-            if (!touched && temp == (horizontal)? horDiv.second.index:verDiv.second.index)
+            if (!touched && temp == div.second.index)
             {
-                first = horizontal? horDiv.second:verDiv.second;
+                first = div.second;
                 first.index = (temp + 1) % n;
                 polygons.back().points.push_back(first);
                 first.index = (temp + n - 1) % n;
             }
-            else if (!touched && temp == (horizontal)? horDiv.first.index:verDiv.first.index)
+            else if (!touched && temp == div.first.index)
             {
-                first = horizontal? horDiv.first:verDiv.first;
+                first = div.first;
                 first.index = (temp + 1) % n;
                 polygons.back().points.push_back(first);
                 first.index = (temp + n - 1) % n;
@@ -396,15 +415,44 @@ vector<Polygon> Polygon::divide(bool horizontal)
         {
             first = points[temp];
         }        
-        touchedPrev = touched || (temp == (horizontal)? horDiv.second.index:verDiv.second.index);
+        touchedPrev = touched || (temp == div.second.index);
         temp = (temp + 1) % n;
     } while (temp != start);
     for (auto &&line : sliceLines)
     {
-        
+        if (line == div)
+            continue;
+        if (line.first.index != div.first.index)
+        {
+            polygons[segToPol[(line.first.index + 1) % n]].sliceLines.push_back(line);
+        }
+        else if (line.second.index != div.second.index)
+        {
+            polygons[segToPol[(line.second.index + 1) % n]].sliceLines.push_back(line);
+        }
+        else if ((horizontal && (line.first.v.y - div.first.v.y)*(line.first.v.y - points[div.first.index].v.y) > 0) ||
+                (!horizontal && (line.first.v.x - div.first.v.x)*(line.first.v.x - points[div.first.index].v.x) > 0))
+        {
+            polygons.front().sliceLines.push_back(line);
+        }
+        else
+        {
+            polygons.back().sliceLines.push_back(line);
+        }
     }
-    
+    //divide verDiv
     if (horizontal)
+    {
+        vector<Polygon> newPolygons;
+        vector<int> newSlidePol;
+        for (size_t i = 0; i < polygons.size(); i++)
+        {
+            /* code */
+        }
+        polygons = newPolygons;
+        slidePol = newSlidePol;
+    }
+    for (size_t i = 0; i < polygons.size(); i++)
     {
         /* code */
     }
