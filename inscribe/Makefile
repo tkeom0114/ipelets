@@ -16,7 +16,7 @@ CXXFLAGS += $(DLL_CFLAGS)
 
 all: $(TARGET)
 
-sources	= inscribe.cpp cut.cpp libs.cpp point.cpp compute.cpp
+sources	= inscribe.cpp cut.cpp libs.cpp point.cpp polygon.cpp
 
 $(TARGET): $(objects)
 	$(MAKE_IPELETDIR)

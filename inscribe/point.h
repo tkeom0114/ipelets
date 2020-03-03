@@ -32,6 +32,6 @@ public:
 
 typedef pair<Point, Point> PPair;
 bool compareIndex(Point const a, Point const b);
-void printPair(vector<PPair> PointPairs);
+Segment ppairToSeg(PPair ppair);
 
 #endif

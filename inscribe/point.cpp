@@ -34,15 +34,7 @@ bool compareIndex(Point const a, Point const b)
     return a.index < b.index;
 }
 
-//for debugging
-void printPair(vector<PPair> PointPairs)
+Segment ppairToSeg(PPair ppair)
 {
-	for (size_t i = 0; i < PointPairs.size(); i++)	
-	{
-		cout << "pair" << i << endl;
-		cout << "First index:"  << PointPairs[i].first.index << endl;
-		cout << "First vector:"  << PointPairs[i].first.v.x << " " << PointPairs[i].first.v.y << endl;
-		cout << "Second index:"  << PointPairs[i].second.index << endl;
-		cout << "Second vector:"  << PointPairs[i].second.v.x << " " << PointPairs[i].second.v.y << endl;
-	}
+    return Segment(ppair.first.v, ppair.second.v);
 }

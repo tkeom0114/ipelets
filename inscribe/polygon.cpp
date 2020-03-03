@@ -1,4 +1,4 @@
-#include "compute.h"
+#include "polygon.h"
 
 Polygon::Polygon(vector<Point> _points, vector<EPair> _edgePairs)
 {
@@ -11,6 +11,7 @@ Polygon::Polygon()
     points = vector<Point>();
     edgePairs = vector<EPair>();
     verDiv = PPair();
+    horDiv = PPair();
 }
 
 Polygon::~Polygon()
@@ -329,7 +330,7 @@ bool Polygon::slicing(IpeletHelper *helper)
         tempPairs.clear(); 
     }
     sort(points.begin(), points.end(), compareIndex);
-    printPair(sliceLines);
+    //printPair(sliceLines);
     return true;
 }
 
@@ -368,7 +369,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
     }
     vector<Polygon> polygons;
     vector<int> segToPol, slidePol;
-    segToPol.assign(-1, n);
+    segToPol.assign(n, -1);
     int start = horizontal? horDiv.first.index:verDiv.first.index;
     start = (start + 1) % n;
     temp = start;
@@ -377,8 +378,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
     PPair div = (horizontal)? horDiv:verDiv;
     do
     {
-        bool touched = horizontal? std::abs(points[temp].v.y - horDiv.first.v.y) < EPS:
-                                std::abs(points[temp].v.x - verDiv.first.v.x) < EPS;
+        bool touched = ppairToSeg(div).distance(points[temp].v) < EPS;
         if (touchedPrev && !touched)
         {
             polygons.push_back(Polygon());
@@ -404,7 +404,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
                 first.index = (temp + n - 1) % n;
             }
         }
-        else
+        if (touched)
         {
             first = points[temp];
         }        
@@ -438,18 +438,65 @@ vector<Polygon> Polygon::divide(bool horizontal)
     {
         vector<Polygon> newPolygons;
         vector<int> newSlidePol;
-        for (size_t i = 0; i < polygons.size(); i++)
+        Vector r;
+        if (ppairToSeg(horDiv).intersects(ppairToSeg(verDiv), r) && Vector(r - verDiv.second.v).len() > EPS)
         {
-            /* code */
+            //get lower part
+            if (verDiv.first.index != horDiv.first.index)
+            {
+                newPolygons.push_back(polygons[segToPol[(verDiv.first.index + 1) % n]]);
+            }
+            else if ((verDiv.first.v.x - horDiv.first.v.x)*(verDiv.first.v.x - points[horDiv.first.index].v.x) > 0)
+            {
+                newPolygons.push_back(polygons.front());
+            }
+            else
+            {
+                newPolygons.push_back(polygons.back());
+            }
+            //get upper part
+            if (verDiv.second.index != horDiv.second.index)
+            {
+                newPolygons.push_back(polygons[segToPol[(verDiv.second.index + 1) % n]]);
+            }
+            else if ((verDiv.second.v.x - horDiv.second.v.x)*(verDiv.second.v.x - points[horDiv.second.index].v.x) > 0)
+            {
+                newPolygons.push_back(polygons.front());
+            }
+            else
+            {
+                newPolygons.push_back(polygons.back());
+            }
+            newPolygons.front().verDiv = PPair(verDiv.first, Point(newPolygons.front().points.back().index, r));
+            newPolygons.back().verDiv = PPair(Point(newPolygons.back().points.back().index, r), verDiv.second);
+        }
+        else
+        {
+            if (verDiv.first.index != horDiv.first.index)
+            {
+                newPolygons.push_back(polygons[segToPol[(verDiv.first.index + 1) % n]]);
+            }
+            else if (verDiv.second.index != horDiv.second.index)
+            {
+                newPolygons.push_back(polygons[segToPol[(verDiv.second.index + 1) % n]]);
+            }
+            else if ((verDiv.first.v.x - horDiv.first.v.x)*(verDiv.first.v.x - points[horDiv.first.index].v.x) > 0)
+            {
+                newPolygons.push_back(polygons.front());
+            }
+            else
+            {
+                newPolygons.push_back(polygons.back());
+            }
+            newPolygons.front().verDiv = verDiv;
         }
         polygons = newPolygons;
         slidePol = newSlidePol;
     }
-    for (size_t i = 0; i < polygons.size(); i++)
+    for (auto &&polygon : polygons)
     {
-        /* code */
+        polygon.renumbering();
     }
-    
     return polygons;
 }
 
@@ -483,4 +530,25 @@ vector<Vector> Polygon::compute()
     //conqure
     
     return triangle;
+}
+
+ostream& operator<<(ostream& os, const Polygon& polygon)
+{
+    cout << "Points" << endl;
+    for (auto &&point : polygon.points)
+    {
+        cout << "Index:" << point.index << " x:" << point.v.x << " y:" << point.v.y << endl;
+    }
+    cout << "SliceLines" << endl;
+    int count = 0;
+    for (auto &&line : polygon.sliceLines)
+    {
+        cout << "pair" << count << endl;
+		cout << "First index:"  << line.first.index << endl;
+		cout << "First vector:"  << line.first.v.x << " " << line.first.v.y << endl;
+		cout << "Second index:"  << line.second.index << endl;
+		cout << "Second vector:"  << line.second.v.x << " " << line.second.v.y << endl;
+        count++;
+    }
+    return os;
 }

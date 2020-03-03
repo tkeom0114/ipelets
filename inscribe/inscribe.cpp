@@ -7,7 +7,7 @@
 #include "point.h"
 #include "libs.h"
 #include "cut.h"
-#include "compute.h"
+#include "polygon.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -92,22 +92,23 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	//polygon.transformPoints(m);
 
 	if (!polygon.slicing(helper)) return false;
-
-	//debugging
-	/*for (size_t i = 0; i < polygon.edgePairs.size(); i++)
+	cout << "polygon.sliceLines.size:" << polygon.sliceLines.size() << endl; // debugging
+	cout << "Input polygon" << endl;
+	cout << polygon << endl;
+	int count = 0;
+	for (auto &&poly : polygon.divide(false))
 	{
-		Curve *sp=new Curve;
-		sp->appendSegment(polygon.edgePairs[i].first.seg.iQ, polygon.edgePairs[i].second.seg.iQ); //BUG:possibility of segmentation falut
-		sp->setClosed(false);
-		Shape shape;
-		shape.appendSubPath(sp);
-		Path *obj = new Path(data->iAttributes, shape);
-		page->append(ESecondarySelected, data->iLayer, obj);
-	}*/
+		cout << "Polygon " << count << endl;
+		cout << poly << endl;
+		count++;
+	}
+	//debugging
 	for (size_t i = 0; i < polygon.sliceLines.size(); i++)
 	{
 		Curve *sp=new Curve;
+		//cout << "Pass1" << endl; // debugging
 		sp->appendSegment(polygon.sliceLines[i].first.v, polygon.sliceLines[i].second.v); //BUG:possibility of segmentation falut
+		//cout << "Pass2" << endl; // debugging
 		sp->setClosed(false);
 		Shape shape;
 		shape.appendSubPath(sp);
