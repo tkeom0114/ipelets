@@ -17,6 +17,9 @@
 using namespace std;
 using namespace ipe;
 
+/**
+ * TODO: erase edgePair if ipelet is complete
+ */
 class Polygon
 {
 public:

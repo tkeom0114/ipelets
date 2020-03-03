@@ -50,6 +50,9 @@ vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
     return surroundPairs;
 }
 
+/**
+ * TODO: erase edgePair if ipelet is complete
+ */
 bool Polygon::slicing(IpeletHelper *helper)
 {
     edgePairs.clear();
@@ -364,7 +367,6 @@ void Polygon::renumbering(int n, bool horizontal)
 
 vector<Polygon> Polygon::divide(bool horizontal)
 {
-    cout << "divide!!!" << endl; //debugging
     int n = static_cast<int>(points.size());
     int temp = 0;
     for (auto &&line : sliceLines)
@@ -375,10 +377,11 @@ vector<Polygon> Polygon::divide(bool horizontal)
         if (dist > temp)
         {
             (horizontal? horDiv:verDiv) = line;
-        }
+            temp = dist;
+        } 
     }
     vector<Polygon> polygons;
-    vector<int> segToPol, slidePol;
+    vector<int> segToPol;
     segToPol.assign(n, -1);
     int start = horizontal? horDiv.first.index:verDiv.first.index;
     start = (start + 1) % n;
@@ -392,7 +395,6 @@ vector<Polygon> Polygon::divide(bool horizontal)
         if (touchedPrev && !touched)
         {
             polygons.push_back(Polygon());
-            slidePol.push_back(first.index);
             polygons.back().points.push_back(first);  
         } 
         if (!touchedPrev || !touched) 
@@ -404,20 +406,17 @@ vector<Polygon> Polygon::divide(bool horizontal)
                 first = div.second;
                 first.index = (temp + 1) % n;
                 polygons.back().points.push_back(first);
-                first.index = (temp + n - 1) % n;
+                first.index = temp;
             }
             else if (!touched && temp == div.first.index)
             {
                 first = div.first;
                 first.index = (temp + 1) % n;
                 polygons.back().points.push_back(first);
-                first.index = (temp + n - 1) % n;
+                first.index = temp;
             }
         }
-        if (touched)
-        {
-            first = points[temp];
-        }        
+        if (touched) first = points[temp];      
         touchedPrev = touched || (temp == div.second.index);
         temp = (temp + 1) % n;
     } while (temp != start);
@@ -426,87 +425,55 @@ vector<Polygon> Polygon::divide(bool horizontal)
         if (line == div)
             continue;
         if (line.first.index != div.first.index)
-        {
             polygons[segToPol[(line.first.index + 1) % n]].sliceLines.push_back(line);
-        }
         else if (line.second.index != div.second.index)
-        {
             polygons[segToPol[(line.second.index + 1) % n]].sliceLines.push_back(line);
-        }
         else if ((horizontal && (line.first.v.y - div.first.v.y)*(line.first.v.y - points[div.first.index].v.y) > 0) ||
                 (!horizontal && (line.first.v.x - div.first.v.x)*(line.first.v.x - points[div.first.index].v.x) > 0))
-        {
             polygons.front().sliceLines.push_back(line);
-        }
         else
-        {
             polygons.back().sliceLines.push_back(line);
-        }
     }
     //divide verDiv
     if (horizontal)
     {
         vector<Polygon> newPolygons;
-        vector<int> newSlidePol;
         Vector r;
         if (ppairToSeg(horDiv).intersects(ppairToSeg(verDiv), r) && Vector(r - verDiv.second.v).len() > EPS)
         {
             //get lower part
             if (verDiv.first.index != horDiv.first.index)
-            {
                 newPolygons.push_back(polygons[segToPol[(verDiv.first.index + 1) % n]]);
-            }
             else if ((verDiv.first.v.x - horDiv.first.v.x)*(verDiv.first.v.x - points[horDiv.first.index].v.x) > 0)
-            {
                 newPolygons.push_back(polygons.front());
-            }
             else
-            {
                 newPolygons.push_back(polygons.back());
-            }
             //get upper part
             if (verDiv.second.index != horDiv.second.index)
-            {
                 newPolygons.push_back(polygons[segToPol[(verDiv.second.index + 1) % n]]);
-            }
             else if ((verDiv.second.v.x - horDiv.second.v.x)*(verDiv.second.v.x - points[horDiv.second.index].v.x) > 0)
-            {
                 newPolygons.push_back(polygons.front());
-            }
             else
-            {
                 newPolygons.push_back(polygons.back());
-            }
             newPolygons.front().verDiv = PPair(verDiv.first, Point(newPolygons.front().points.back().index, r));
             newPolygons.back().verDiv = PPair(Point(newPolygons.back().points.back().index, r), verDiv.second);
         }
         else
         {
             if (verDiv.first.index != horDiv.first.index)
-            {
                 newPolygons.push_back(polygons[segToPol[(verDiv.first.index + 1) % n]]);
-            }
             else if (verDiv.second.index != horDiv.second.index)
-            {
                 newPolygons.push_back(polygons[segToPol[(verDiv.second.index + 1) % n]]);
-            }
             else if ((verDiv.first.v.x - horDiv.first.v.x)*(verDiv.first.v.x - points[horDiv.first.index].v.x) > 0)
-            {
                 newPolygons.push_back(polygons.front());
-            }
             else
-            {
                 newPolygons.push_back(polygons.back());
-            }
             newPolygons.front().verDiv = verDiv;
         }
         polygons = newPolygons;
-        slidePol = newSlidePol;
     }
     for (auto &&polygon : polygons)
-    {
         polygon.renumbering(n, horizontal);
-    }
     return polygons;
 }
 

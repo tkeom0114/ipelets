@@ -92,7 +92,6 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	//polygon.transformPoints(m);
 
 	if (!polygon.slicing(helper)) return false;
-	cout << "polygon.sliceLines.size:" << polygon.sliceLines.size() << endl; // debugging
 	cout << "Input polygon" << endl;
 	cout << polygon << endl;
 	int count = 0;
@@ -106,9 +105,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	for (size_t i = 0; i < polygon.sliceLines.size(); i++)
 	{
 		Curve *sp=new Curve;
-		//cout << "Pass1" << endl; // debugging
-		sp->appendSegment(polygon.sliceLines[i].first.v, polygon.sliceLines[i].second.v); //BUG:possibility of segmentation falut
-		//cout << "Pass2" << endl; // debugging
+		sp->appendSegment(polygon.sliceLines[i].first.v, polygon.sliceLines[i].second.v);
 		sp->setClosed(false);
 		Shape shape;
 		shape.appendSubPath(sp);

@@ -4,7 +4,7 @@
 label = "Inscribed triangle"
 
 --description
-about = "Inscribed triangle"
+about = "Ipelet for finding maximal axis-aligned triangle which inscribed in a simple polygon"
 
 -- this variable will store the C++ ipelet when it has been loaded
 ipelet = false
