@@ -32,7 +32,7 @@ public:
     void setPoints(Curve const *curve);
     void transformPoints(Linear const &l);
     bool slicing(IpeletHelper *helper);
-    void renumbering();
+    void renumbering(int n, bool horizontal);
     vector<Polygon> divide(bool horizontal); //set Edge div in the function
     Polygon cutting(bool horizontal);
     vector<Vector> compute();

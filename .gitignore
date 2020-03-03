@@ -42,3 +42,6 @@
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history
+
+# Ignore debug files
+inscribe_debug/*

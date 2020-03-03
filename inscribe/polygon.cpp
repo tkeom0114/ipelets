@@ -334,10 +334,16 @@ bool Polygon::slicing(IpeletHelper *helper)
     return true;
 }
 
-void Polygon::renumbering()
+void Polygon::renumbering(int n, bool horizontal)
 {
+    //erase colinear points
+    size_t m = points.size();
+    while (m > 1 && std::abs(points[m - 1].v.x - points[m - 2].v.x) < EPS)
+    {
+        points.pop_back();
+        m--;
+    }
     int slice = points[0].index;
-    int n = points.size();
     for (auto &&point : points)
         point.index = (point.index + n - slice) % n;
     for (auto &&line : sliceLines)
@@ -354,6 +360,7 @@ void Polygon::renumbering()
 
 vector<Polygon> Polygon::divide(bool horizontal)
 {
+    cout << "divide!!!" << endl; //debugging
     int n = static_cast<int>(points.size());
     int temp = 0;
     for (auto &&line : sliceLines)
@@ -364,7 +371,6 @@ vector<Polygon> Polygon::divide(bool horizontal)
         if (dist > temp)
         {
             (horizontal? horDiv:verDiv) = line;
-            break;
         }
     }
     vector<Polygon> polygons;
@@ -495,7 +501,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
     }
     for (auto &&polygon : polygons)
     {
-        polygon.renumbering();
+        polygon.renumbering(n, horizontal);
     }
     return polygons;
 }

@@ -1,10 +1,10 @@
---Template of Lua wrapper for C++ ipelet
+--Lua wrapper for C++ ipelet
 
 --label on ipelet menubar
 label = "Inscribed triangle"
 
 --description
-about = "{ipelet_description}"
+about = "Inscribed triangle"
 
 -- this variable will store the C++ ipelet when it has been loaded
 ipelet = false
