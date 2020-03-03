@@ -74,30 +74,29 @@ bool Polygon::slicing(IpeletHelper *helper)
         if (i < n - 1 && ipe::abs(points[i+1].v.x - points[i].v.x) < EPS ) continue;
         Edge *prevEdge = nullptr;
         Edge *edgePointer = nullptr;
-        Point *p, *q;
+        Point p, q;
         Point *top = nullptr;
         Point *bottom = nullptr;
         do
         {
             //compute vertical segment pg(p:bottom q: top)
-            p = &tempPoints.front();
-            Edge pl(0, p->v, p->v);
-            q = nullptr;
+            p = tempPoints.front();
+            Edge pl(0, p.v, p.v);
             int temp = 0, dist = 0;
             do
             {
-                q = &tempPoints.front();
+                q = tempPoints.front();
                 tempPoints.pop();
                 if(tempPoints.empty()) break;
-                temp = (tempPoints.front().index - q->index + n) % n;
+                temp = (tempPoints.front().index - q.index + n) % n;
                 if (dist == 0)
                 {
                     dist = temp;
                 }
             } while (temp == 1 || temp == static_cast<int>(n - 1));
-			Edge ql(0, q->v, q->v);
-            surroundPairsP = surroundPairs(*p, intersectPairs);
-            surroundPairsQ = surroundPairs(*q, intersectPairs);
+			Edge ql(0, q.v, q.v);
+            surroundPairsP = surroundPairs(p, intersectPairs);
+            surroundPairsQ = surroundPairs(q, intersectPairs);
             //create prevEdge if not exist
             if (prevEdge == nullptr)
             {
@@ -105,29 +104,29 @@ bool Polygon::slicing(IpeletHelper *helper)
                 {
                     if (p == q)
                     {
-						prevEdge = (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n])? 
-                                    &polygonEdges[p->index]:&polygonEdges[(p->index + n - 1) % n];
+						prevEdge = (polygonEdges[p.index] < polygonEdges[(p.index + n - 1) % n])? 
+                                    &polygonEdges[p.index]:&polygonEdges[(p.index + n - 1) % n];
                     }
                     else if (dist == 1)
                     {
-                        prevEdge = &polygonEdges[(p->index + n - 1)%n];
+                        prevEdge = &polygonEdges[(p.index + n - 1)%n];
                     }
                     else if (dist == static_cast<int>(n - 1))
                     {
-                        prevEdge = &polygonEdges[p->index];
+                        prevEdge = &polygonEdges[p.index];
                     }
                     else
                     {
                         helper->message("Error1");//BUG1
                         return false;
                     }
-                    bottom = new Point(*q);
+                    bottom = new Point(q);
                 }
                 else if (surroundPairsP.front().first < pl)
                 {
                     Vector r;
                     Vector dir(0.0, 1.0);
-                    Line l(p->v, dir);
+                    Line l(p.v, dir);
                     if (!surroundPairsP.front().first.seg.intersects(l, r))
                     {
                         r = surroundPairsP.front().first.seg.iQ;
@@ -137,13 +136,13 @@ bool Polygon::slicing(IpeletHelper *helper)
                     intersectPairs.erase(surroundPairsP.front());
                     Edge newpe(surroundPairsP.front().first.index, surroundPairsP.front().first.seg.iP, r);
                     intersectPairs.insert(pair<Edge, Edge>(newpe, surroundPairsP.front().second));
-                    surroundPairsP = surroundPairs(*p, intersectPairs);
-					surroundPairsQ = surroundPairs(*q, intersectPairs);
+                    surroundPairsP = surroundPairs(p, intersectPairs);
+					surroundPairsQ = surroundPairs(q, intersectPairs);
                     bottom = new Point(surroundPairsP.front().first.index, r);
                 }
             }
             if (prevEdge != nullptr && !surroundPairsP.empty() && !surroundPairsQ.empty() && 
-                surroundPairsP.front().second.seg.iQ == p->v && surroundPairsQ.back().first.seg.iQ == q->v)
+                surroundPairsP.front().second.seg.iQ == p.v && surroundPairsQ.back().first.seg.iQ == q.v)
             {
                 edgePairs.push_back(surroundPairsP.front());
                 intersectPairs.erase(surroundPairsP.front());
@@ -155,25 +154,25 @@ bool Polygon::slicing(IpeletHelper *helper)
 				{
 					if (p == q)
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, std::min(polygonEdges[p->index], polygonEdges[(p->index + n - 1) % n])));
-						if (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n])
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, std::min(polygonEdges[p.index], polygonEdges[(p.index + n - 1) % n])));
+						if (polygonEdges[p.index] < polygonEdges[(p.index + n - 1) % n])
 						{
-							prevEdge = &polygonEdges[(p->index + n - 1) % n];
+							prevEdge = &polygonEdges[(p.index + n - 1) % n];
 						}
 						else
 						{
-							prevEdge = &polygonEdges[p->index];
+							prevEdge = &polygonEdges[p.index];
 						}
 					}
 					else if (dist == 1)
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n -1) % n]));
-						prevEdge = &polygonEdges[q->index];
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p.index + n -1) % n]));
+						prevEdge = &polygonEdges[q.index];
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
-						prevEdge = &polygonEdges[(q->index + n -1) % n];
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p.index]));
+						prevEdge = &polygonEdges[(q.index + n -1) % n];
 					}
 					else
 					{
@@ -181,37 +180,37 @@ bool Polygon::slicing(IpeletHelper *helper)
                         return false;
 					}
 				}
-                else if (surroundPairsP.front().first.seg.iQ == p->v && ql < surroundPairsP.front().second)
+                else if (surroundPairsP.front().first.seg.iQ == p.v && ql < surroundPairsP.front().second)
                 {
                     if (p == q)
 					{
-						if (surroundPairsP.front().first.index == p->index)
+						if (surroundPairsP.front().first.index == p.index)
                         {
-                            prevEdge = &polygonEdges[(q->index + n -1) % n];
+                            prevEdge = &polygonEdges[(q.index + n -1) % n];
                         }
                         else
                         {
-                            prevEdge = &polygonEdges[q->index];
+                            prevEdge = &polygonEdges[q.index];
                         }
 					}
 					else if (dist == 1)
 					{
-						prevEdge = &polygonEdges[q->index];
+						prevEdge = &polygonEdges[q.index];
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
-						prevEdge = &polygonEdges[(q->index + n -1) % n];
+						prevEdge = &polygonEdges[(q.index + n -1) % n];
 					}
 					else
 					{
 						helper->message("Error3");//BUG3
                         return false;
 					}
-                    bottom = new Point(*q);
+                    bottom = new Point(q);
                 }
 			}
             //make pair at the end
-            Edge fl(0, q->v, q->v);
+            Edge fl(0, q.v, q.v);
             if (!tempPoints.empty())
             {
                 Segment fs(tempPoints.front().v, tempPoints.front().v);
@@ -223,7 +222,7 @@ bool Polygon::slicing(IpeletHelper *helper)
                 {
                     Vector r;
                     Vector dir(0.0, 1.0);
-                    Line l(q->v, dir);
+                    Line l(q.v, dir);
                     if (!surroundPairsQ.back().second.seg.intersects(l, r))
                     {
                         //r = surroundPairsQ.back().second.seg.iQ;
@@ -243,11 +242,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                         {
                             if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iP)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q.index]));
                             }
                             else if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iQ)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q.index + n - 1) % n]));
                             }
                             else
                             {
@@ -259,11 +258,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                         {
                             if (dist == 1)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q.index]));
                             }
                             else if (dist == static_cast<int>(n - 1))
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q.index + n - 1) % n]));
                             }
                             else
                             {
@@ -275,11 +274,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                         {
                             if (dist == 1)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n - 1) % n]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p.index + n - 1) % n]));
                             }
                             else if (dist == static_cast<int>(n - 1))
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p.index]));
                             }
                             else
                             {
@@ -287,7 +286,7 @@ bool Polygon::slicing(IpeletHelper *helper)
                                 return false;
                             }
                         }
-                        top = new Point(*p);    
+                        top = new Point(p);    
                     }
                     if (!surroundPairsP.empty())
                     {
@@ -320,15 +319,15 @@ bool Polygon::slicing(IpeletHelper *helper)
         {
 			if (pair.first.seg.iP.x > pair.first.seg.iQ.x && pair.second.seg.iP.x > pair.second.seg.iQ.x)
 			{
-				intersectPairs.emplace(EPair(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP)));
+				intersectPairs.emplace(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP));
 			}
 			else if (pair.first.seg.iP.x > pair.first.seg.iQ.x)
 			{
-				intersectPairs.emplace(EPair(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), pair.second));
+				intersectPairs.emplace(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), pair.second);
 			}
 			else if (pair.second.seg.iP.x > pair.second.seg.iQ.x)
 			{
-				intersectPairs.emplace(EPair(pair.first, Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP)));
+				intersectPairs.emplace(pair.first, Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP));
 			}
 			else
 			{
@@ -394,6 +393,7 @@ vector<Polygon> Polygon::divide(bool horizontal)
         bool touched = ppairToSeg(div).distance(points[temp].v) < EPS;
         if (touchedPrev && !touched)
         {
+            //polygons.emplace_back();
             polygons.push_back(Polygon());
             polygons.back().points.push_back(first);  
         } 
@@ -477,10 +477,10 @@ vector<Polygon> Polygon::divide(bool horizontal)
     return polygons;
 }
 
-Polygon Polygon::cutting(bool horizontal)
+void Polygon::cutting(bool horizontal)
 {
+    sliceLines.clear();
     vector<Vector> points;
-    return Polygon();
 }
 
 

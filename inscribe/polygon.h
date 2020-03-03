@@ -37,7 +37,7 @@ public:
     bool slicing(IpeletHelper *helper);
     void renumbering(int n, bool horizontal);
     vector<Polygon> divide(bool horizontal); //set Edge div in the function
-    Polygon cutting(bool horizontal);
+    void cutting(bool horizontal);
     vector<Vector> compute();
     friend ostream& operator<<(ostream& os, const Polygon& polygon);
 };
