@@ -293,7 +293,12 @@ bool Polygon::slicing(IpeletHelper *helper)
                     }
                 }      
                 prevEdge = nullptr;
-                if (edgePointer != nullptr) delete edgePointer;
+                if (edgePointer != nullptr)
+                {
+                    delete edgePointer;
+                    edgePointer = nullptr;
+                }
+                 
                 if (top && bottom && top->v.y > bottom->v.y)
                     sliceLines.push_back(PPair(*bottom, *top));  
                 if (top != nullptr)
@@ -330,7 +335,6 @@ bool Polygon::slicing(IpeletHelper *helper)
         tempPairs.clear(); 
     }
     sort(points.begin(), points.end(), compareIndex);
-    //printPair(sliceLines);
     return true;
 }
 

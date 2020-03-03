@@ -1,6 +1,6 @@
-#! /bin/sh
+#! /bin/zsh
 IPELET_NAME="inscribe"
-DIR_PATH=$(dirname $(realpath ${BASH_SOURCE}) )
+DIR_PATH=$(dirname $(realpath %N) )
 BUILD_PATH=${DIR_PATH}"/../../../build/ipelets"
 
 echo ${BASH_SOURCE}
