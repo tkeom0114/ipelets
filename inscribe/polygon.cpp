@@ -70,7 +70,6 @@ bool Polygon::slicing(IpeletHelper *helper)
     queue<Point> tempPoints;
     for (size_t i = 0; i < n; i++)
     {
-        cout << "Iteration" << i << endl; //debugging
         tempPoints.push(points[i]);
         if (i < n - 1 && ipe::abs(points[i+1].v.x - points[i].v.x) < EPS ) continue;
         Edge *prevEdge = nullptr;
@@ -93,7 +92,6 @@ bool Polygon::slicing(IpeletHelper *helper)
                     dist = temp;
                 }
             } while (temp == 1 || temp == static_cast<int>(n - 1));
-            cout << "dist:" << dist << endl;
 			Edge ql(0, q.v, q.v);
             surroundPairsP = surroundPairs(p, intersectPairs);
             surroundPairsQ = surroundPairs(q, intersectPairs);
@@ -300,19 +298,6 @@ bool Polygon::slicing(IpeletHelper *helper)
                     }
                     top = make_unique<Point>(p);
                 }
-                //debugging
-                if (prevEdge) 
-                {
-                    cout << "prevEdge" << endl;
-                    printEdge(*prevEdge);
-                }
-                if (top && bottom)
-                {
-                    cout << "Bottom index:"  << bottom->index << endl;
-                    cout << "Bottom:"  << bottom->v.x << " " << bottom->v.y << endl;
-                    cout << "Top index:"  << top->index << endl;
-                    cout << "Top:"  << top->v.x << " " << top->v.y << endl;
-                }
                 prevEdge = nullptr;                 
                 if (top && bottom && top->v.y > bottom->v.y)
                     sliceLines.push_back(PPair(*bottom, *top));
@@ -322,7 +307,6 @@ bool Polygon::slicing(IpeletHelper *helper)
                 bottom = nullptr;
             }        
         } while (!tempPoints.empty());
-        printPair(tempPairs); //debugging
         for (auto &&pair : tempPairs)
         {
 			if (pair.first.seg.iP.x > pair.first.seg.iQ.x && pair.second.seg.iP.x > pair.second.seg.iQ.x)

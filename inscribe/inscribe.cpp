@@ -94,13 +94,13 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	if (!polygon.slicing(helper)) return false;
 	cout << "Input polygon" << endl;
 	cout << polygon << endl;
-	/*int count = 0;
+	int count = 0;
 	for (auto &&poly : polygon.divide(false))
 	{
 		cout << "Polygon " << count << endl;
 		cout << poly << endl;
 		count++;
-	}*/
+	}
 	//debugging
 	for (size_t i = 0; i < polygon.sliceLines.size(); i++)
 	{
