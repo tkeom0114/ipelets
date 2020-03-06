@@ -23,13 +23,13 @@ using namespace ipe;
 class Polygon
 {
 public:
-    vector<Point> points;
+    vector<PointInfo> points;
     vector<EPair> edgePairs;
     vector<PPair> sliceLines;
     PPair verDiv;
     PPair horDiv;
 public:
-    Polygon(vector<Point> _points, vector<EPair> _edgePairs);
+    Polygon(vector<PointInfo> _points, vector<EPair> _edgePairs);
     Polygon();
     ~Polygon();
     void setPoints(Curve const *curve);

@@ -36,6 +36,7 @@ struct Compare
 
 
 void printPair(vector<EPair> EdgePairs);
+void printEdge(Edge e);
 
 
 

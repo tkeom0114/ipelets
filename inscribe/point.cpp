@@ -1,16 +1,16 @@
 #include "point.h"
 
-Point::Point(int _index, Vector _v)
+/*Point::Point(int _index, Vector _v)
 {
     index = _index;
     v = _v;
-}
+}*/
 
-Point::Point()
+/*Point::Point()
 {
     index = -1;
     v = Vector(0.0, 0.0);
-}
+}*/
 
 bool Point::operator<(const Point rhs) const
 {
