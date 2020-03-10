@@ -1,5 +1,7 @@
 #include "polygon.h"
 
+const array<Linear,3> Polygon::trans = {Linear(), Linear(0.0, 1.0, -1.0, 0.0), Linear(-1.0, 1.0, -1.0, -1.0)};
+
 Polygon::Polygon(vector<PointInfo> _points, vector<EPair> _edgePairs)
 {
     points = _points;
@@ -35,7 +37,7 @@ void Polygon::setPoints(Curve const *curve)
 void Polygon::transformPoints(Linear const &l)
 {
     for (size_t i = 0; i < points.size(); i++)
-		points[i].v = l.inverse() * points[i].v;
+		points[i].v = l * points[i].v;
 }
 
 vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
@@ -53,48 +55,50 @@ vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
 /**
  * TODO: erase edgePair if ipelet is complete
  */
-bool Polygon::slicing(IpeletHelper *helper)
+bool Polygon::computeVis(IpeletHelper *helper, DIR dir)
 {
+    transformPoints(trans[dir]);
     edgePairs.clear();
-    sliceLines.clear();
     vector<Edge> polygonEdges;
     size_t n = points.size();
     for (size_t i = 1; i < n; i++)
-    {
         polygonEdges.push_back(Edge(i-1, points[i-1].v, points[i].v));
-    }
     polygonEdges.push_back(Edge(n-1, points[n-1].v, points[0].v));
     sort(points.begin(), points.end());
     vector<EPair> tempPairs, surroundPairsP, surroundPairsQ;
     set<EPair, Compare> intersectPairs;
-    queue<Point> tempPoints;
+    queue<PointInfo*> pointsOnLine;
+    vector<PointInfo*> pointsOnSegment;
     for (size_t i = 0; i < n; i++)
     {
-        tempPoints.push(points[i]);
+        pointsOnLine.push(&points[i]);
         if (i < n - 1 && ipe::abs(points[i+1].v.x - points[i].v.x) < EPS ) continue;
         Edge *prevEdge = nullptr;
-        Point p, q;
-        unique_ptr<Point> top(nullptr), bottom(nullptr);
+        PointInfo *p, *q, *top, *bottom;
+        shared_ptr<PointInfo> newTop, newBottom;
+        top = nullptr; 
+        bottom = nullptr;
         do
         {
             //compute vertical segment pg(p:bottom q: top)
-            p = tempPoints.front();
-            Edge pl(0, p.v, p.v);
+            p = pointsOnLine.front();
+            Edge pl(0, p->v, p->v);
             int temp = 0, dist = 0;
             do
             {
-                q = tempPoints.front();
-                tempPoints.pop();
-                if(tempPoints.empty()) break;
-                temp = (tempPoints.front().index - q.index + n) % n;
+                q = pointsOnLine.front();
+                pointsOnSegment.push_back(q);
+                pointsOnLine.pop();
+                if(pointsOnLine.empty()) break;
+                temp = (pointsOnLine.front()->index - q->index + n) % n;
                 if (dist == 0)
                 {
                     dist = temp;
                 }
             } while (temp == 1 || temp == static_cast<int>(n - 1));
-			Edge ql(0, q.v, q.v);
-            surroundPairsP = surroundPairs(p, intersectPairs);
-            surroundPairsQ = surroundPairs(q, intersectPairs);
+			Edge ql(0, q->v, q->v);
+            surroundPairsP = surroundPairs(*p, intersectPairs);
+            surroundPairsQ = surroundPairs(*q, intersectPairs);
             //create prevEdge if not exist
             if (prevEdge == nullptr)
             {
@@ -102,29 +106,29 @@ bool Polygon::slicing(IpeletHelper *helper)
                 {
                     if (p == q)
                     {
-						prevEdge = (polygonEdges[p.index] < polygonEdges[(p.index + n - 1) % n])? 
-                                    &polygonEdges[p.index]:&polygonEdges[(p.index + n - 1) % n];
+						prevEdge = (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n])? 
+                                    &polygonEdges[p->index]:&polygonEdges[(p->index + n - 1) % n];
                     }
                     else if (dist == 1)
                     {
-                        prevEdge = &polygonEdges[(p.index + n - 1)%n];
+                        prevEdge = &polygonEdges[(p->index + n - 1)%n];
                     }
                     else if (dist == static_cast<int>(n - 1))
                     {
-                        prevEdge = &polygonEdges[p.index];
+                        prevEdge = &polygonEdges[p->index];
                     }
                     else
                     {
                         helper->message("Error1");//BUG1
                         return false;
                     }
-                    bottom = make_unique<Point>(q);
+                    if (bottom == nullptr) bottom = p;
                 }
                 else if (surroundPairsP.front().first < pl)
                 {
                     Vector r;
                     Vector dir(0.0, 1.0);
-                    Line l(p.v, dir);
+                    Line l(p->v, dir);
                     if (!surroundPairsP.front().first.seg.intersects(l, r))
                     {
                         r = surroundPairsP.front().first.seg.iQ;
@@ -133,13 +137,17 @@ bool Polygon::slicing(IpeletHelper *helper)
                     intersectPairs.erase(surroundPairsP.front());
                     Edge newpe(surroundPairsP.front().first.index, surroundPairsP.front().first.seg.iP, r);
                     intersectPairs.insert(pair<Edge, Edge>(newpe, surroundPairsP.front().second));
-                    surroundPairsP = surroundPairs(p, intersectPairs);
-					surroundPairsQ = surroundPairs(q, intersectPairs);
-                    bottom = make_unique<Point>(surroundPairsP.front().first.index, r);  
+                    surroundPairsP = surroundPairs(*p, intersectPairs);
+					surroundPairsQ = surroundPairs(*q, intersectPairs);
+                    if (bottom == nullptr)
+                    {
+                        newBottom = make_shared<PointInfo>(PointInfo(surroundPairsP.front().first.index, r));
+                        bottom = newBottom.get();
+                    } 
                 }
             }
             if (prevEdge != nullptr && !surroundPairsP.empty() && !surroundPairsQ.empty() && 
-                surroundPairsP.front().second.seg.iQ == p.v && surroundPairsQ.back().first.seg.iQ == q.v)
+                surroundPairsP.front().second.seg.iQ == p->v && surroundPairsQ.back().first.seg.iQ == q->v)
             {
                 edgePairs.push_back(surroundPairsP.front());
                 intersectPairs.erase(surroundPairsP.front());
@@ -151,25 +159,25 @@ bool Polygon::slicing(IpeletHelper *helper)
 				{
 					if (p == q)
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, std::min(polygonEdges[p.index], polygonEdges[(p.index + n - 1) % n])));
-						if (polygonEdges[p.index] < polygonEdges[(p.index + n - 1) % n])
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, std::min(polygonEdges[p->index], polygonEdges[(p->index + n - 1) % n])));
+						if (polygonEdges[p->index] < polygonEdges[(p->index + n - 1) % n])
 						{
-                            prevEdge = &polygonEdges[(p.index + n - 1)%n];
+                            prevEdge = &polygonEdges[(p->index + n - 1)%n];
 						}
 						else
 						{
-                            prevEdge = &polygonEdges[p.index];
+                            prevEdge = &polygonEdges[p->index];
 						}
 					}
 					else if (dist == 1)
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p.index + n -1) % n]));
-                        prevEdge = &polygonEdges[q.index];
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n -1) % n]));
+                        prevEdge = &polygonEdges[q->index];
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
-						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p.index]));
-                        prevEdge = &polygonEdges[(q.index + n -1) % n];
+						tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
+                        prevEdge = &polygonEdges[(q->index + n -1) % n];
 					}
 					else
 					{
@@ -177,54 +185,53 @@ bool Polygon::slicing(IpeletHelper *helper)
                         return false;
 					}
 				}
-                else if (surroundPairsP.front().first.seg.iQ == p.v && ql < surroundPairsP.front().second)
+                else if (surroundPairsP.front().first.seg.iQ == p->v && ql < surroundPairsP.front().second)
                 {
                     if (p == q)
 					{
-						if (surroundPairsP.front().first.index == p.index)
+						if (surroundPairsP.front().first.index == p->index)
                         {
-                            prevEdge = &polygonEdges[(q.index + n -1) % n];
+                            prevEdge = &polygonEdges[(q->index + n -1) % n];
                         }
                         else
                         {
-                            prevEdge = &polygonEdges[q.index];
+                            prevEdge = &polygonEdges[q->index];
                         }
 					}
 					else if (dist == 1)
 					{
-                        prevEdge = &polygonEdges[q.index];
+                        prevEdge = &polygonEdges[q->index];
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
-                        prevEdge = &polygonEdges[q.index];
+                        prevEdge = &polygonEdges[q->index];
 					}
 					else
 					{
 						helper->message("Error3");//BUG3
                         return false;
 					}
-                    //bottom = make_unique<Point>(q);
                 }
-                if (surroundPairsP.front().first.seg.iQ == p.v)
+                if (surroundPairsP.front().first.seg.iQ == p->v)
                 {
-                    bottom = make_unique<Point>(q);
+                    if (bottom == nullptr) bottom = p;
                 }
                 
 			}
             //make pair at the end
-            Edge fl(0, q.v, q.v);
-            if (!tempPoints.empty())
+            Edge fl(0, q->v, q->v);
+            if (!pointsOnLine.empty())
             {
-                Segment fs(tempPoints.front().v, tempPoints.front().v);
+                Segment fs(pointsOnLine.front()->v, pointsOnLine.front()->v);
                 fl.seg = fs;
             } 
-            if (tempPoints.empty() || surroundPairsQ.empty() || surroundPairsQ.back().second < fl)
+            if (pointsOnLine.empty() || surroundPairsQ.empty() || surroundPairsQ.back().second < fl)
             {
                 if (!surroundPairsQ.empty() && ql < surroundPairsQ.back().second)
                 {
                     Vector r;
                     Vector dir(0.0, 1.0);
-                    Line l(q.v, dir);
+                    Line l(q->v, dir);
                     if (!surroundPairsQ.back().second.seg.intersects(l, r))
                     {
                         //r = surroundPairsQ.back().second.seg.iQ;
@@ -234,7 +241,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                     tempPairs.push_back(pair<Edge, Edge>(*prevEdge, Edge(surroundPairsQ.back().second.index, r, surroundPairsQ.back().second.seg.iQ)));
                     edgePairs.push_back(pair<Edge, Edge>(surroundPairsQ.back().first, Edge(surroundPairsQ.back().second.index, surroundPairsQ.back().second.seg.iP, r)));
                     intersectPairs.erase(surroundPairsQ.back());
-                    top = make_unique<Point>(surroundPairsQ.back().second.index, r);  
+                    if (top == nullptr)
+                    {
+                        newTop = make_shared<PointInfo>(surroundPairsQ.back().second.index, r);
+                        top = newTop.get();
+                    }  
                 }
                 else
                 {
@@ -244,11 +255,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                         {
                             if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iP || prevEdge->seg.iP.x > prevEdge->seg.iQ.x)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q.index]));             
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));             
                             }
                             else if (prevEdge->seg.iQ == polygonEdges[prevEdge->index].seg.iQ)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q.index + n - 1) % n])); 
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n])); 
                             }
                             else
                             {
@@ -261,11 +272,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                           
                             if (dist == 1)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q.index]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[q->index]));
                             }
                             else if (dist == static_cast<int>(n - 1))
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q.index + n - 1) % n]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(q->index + n - 1) % n]));
                             }
                             else
                             {
@@ -277,11 +288,11 @@ bool Polygon::slicing(IpeletHelper *helper)
                         {
                             if (dist == 1)
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p.index + n - 1) % n]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[(p->index + n - 1) % n]));
                             }
                             else if (dist == static_cast<int>(n - 1))
                             {
-                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p.index]));
+                                tempPairs.push_back(pair<Edge, Edge>(*prevEdge, polygonEdges[p->index]));
                             }
                             else
                             {
@@ -296,22 +307,29 @@ bool Polygon::slicing(IpeletHelper *helper)
                         edgePairs.push_back(surroundPairsP.front());
                         intersectPairs.erase(surroundPairsP.front());
                     }
-                    top = make_unique<Point>(p);
+                    if (top == nullptr) top = q;
                 }
                 prevEdge = nullptr;                 
-                if (top && bottom && top->v.y > bottom->v.y)
-                    sliceLines.push_back(PPair(*bottom, *top));
-                else if (top && bottom)
-                    sliceLines.push_back(PPair(*top, *bottom)); 
-                top = nullptr;
-                bottom = nullptr;
+                if (top && bottom)
+                {
+                    for (auto &&point : pointsOnSegment)
+                    {
+                        //point->visible[dir] = PPair(*bottom, *top);
+                        point->visible[dir] = trans[dir].inverse() * PPair(*bottom, *top);
+                    }
+                    //sliceLines[dir].push_back(PPair(*bottom, *top));
+                    pointsOnSegment.clear();
+                    top = nullptr;
+                    bottom = nullptr;
+                }
             }        
-        } while (!tempPoints.empty());
+        } while (!pointsOnLine.empty());
         for (auto &&pair : tempPairs)
         {
 			if (pair.first.seg.iP.x > pair.first.seg.iQ.x && pair.second.seg.iP.x > pair.second.seg.iQ.x)
 			{
-				intersectPairs.emplace(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP));
+				intersectPairs.emplace(Edge(pair.first.index, pair.first.seg.iQ ,pair.first.seg.iP), 
+                                    Edge(pair.second.index,pair.second.seg.iQ ,pair.second.seg.iP));
 			}
 			else if (pair.first.seg.iP.x > pair.first.seg.iQ.x)
 			{
@@ -329,10 +347,11 @@ bool Polygon::slicing(IpeletHelper *helper)
         tempPairs.clear(); 
     }
     sort(points.begin(), points.end(), compareIndex);
+    transformPoints(trans[dir].inverse());
     return true;
 }
 
-void Polygon::renumbering(int n, bool horizontal)
+void Polygon::renumbering(int n, DIR dir)
 {
     //erase colinear points
     size_t m = points.size();
@@ -341,13 +360,104 @@ void Polygon::renumbering(int n, bool horizontal)
         points.pop_back();
         m--;
     }
+    for (size_t i = 0; i < m; i++)
+    {
+        for (size_t d = 0; d < 3; d++)
+        {
+            if ((points[i] == points.front() || points[i] == points.back()) && d == dir)
+            {
+                points[i].visible[d] = PPair(std::min(points.front(), points.back()), std::max(points.front(), points.back())); 
+                continue;
+            }
+            else if (points[i].visible[d].first.index == -1)
+            {
+                Vector a = points[i].v - points[(i + m - 1) % m].v;
+                Vector b = points[(i + 1) % m].v - points[i].v;
+                Vector c;
+                (trans[d].inverse() * Vector(0.0, 1.0)).factorize(c);
+                double horDir = std::abs(cross(b, c)) < EPS? cross(a, c):cross(b, c);
+                double verDir = horDir * cross(a, b);
+                if (std::abs(cross(a, c)) > EPS && std::abs(cross(b, c)) > EPS && cross(a, c) * cross(b, c) < 0)
+                {
+                    points[i].visible[d] = PPair(points[i], points[i]);
+                }
+                else
+                {
+                    bool open = true;
+                    bool preOpen = false;
+                    Point intersect = points[i];
+                    Vector temp;
+                    for (size_t j = (i + 1) % m; j != i; j = (j + 1) % m)
+                    {
+                        temp = points[j].v - points[i].v;
+                        if (open && dot(intersect.v - points[i].v, c) * verDir < dot(temp, c) * verDir &&
+                            std::abs(cross(temp, c)) < EPS)
+                        {
+                            intersect = points[j];
+                        }
+                        else if (open && cross(temp, c) * horDir < -EPS)
+                        {
+                            if (intersect != points[(j + m - 1) % m])
+                            {
+                                Segment(points[(j + m - 1) % m].v, points[j].v).intersects(Line(points[i].v, c), intersect.v);
+                                intersect.index = points[(j + m - 1) % m].index;
+                            }
+                            open = false;
+                            preOpen = false;
+                        }
+                        else if (preOpen && std::abs(cross(temp, c)) < EPS && 
+                                dot(intersect.v - points[i].v, c) * verDir > dot(temp, c) * verDir)
+                        {
+                            intersect = points[j];
+                            open = true;
+                        }
+                        else if (!open && std::abs(cross(temp, c) > EPS))
+                        {
+                            Vector r = points[(j + m - 1) % m].v;
+                            bool isIntersect = 
+                            (std::abs(cross(r - points[i].v, c)) > EPS && Segment(points[(j + m - 1) % m].v, points[j].v).intersects(Line(points[i].v, c), r))
+                            || (std::abs(cross(points[(j + m - 1) % m].v - points[i].v, c)) < EPS && cross(temp, c) * horDir > EPS);
+                            if (isIntersect && dot(intersect.v - points[i].v, c) * verDir > dot(r, c) * verDir)
+                            {
+                                intersect.v = r;
+                                intersect.index = points[(j + m - 1) % m].index;
+                                preOpen = !preOpen;
+                            }
+                        }   
+                    }
+                    points[i].visible[d] = PPair(std::min(Point(points[i]), intersect), std::max(Point(points[i]), intersect));
+                }
+                continue;
+            }     
+            Point p = Point(points.back().index, Vector());
+            bool intersect = ppairToSeg(points[i].visible[d]).intersects(Segment(points.front().v, points.back().v), p.v);
+            bool frontOn = ppairToSeg(points[i].visible[d]).distance(points.front().v) < EPS;
+            bool backOn = ppairToSeg(points[i].visible[d]).distance(points.back().v) < EPS;
+            if (intersect || frontOn || backOn)
+            {
+                if (frontOn) p = points.front();
+                if (backOn) p = points.back();
+                double discriminant = (dir == DIR::VER)? points[1].v.x - points[0].v.x:points[1].v.y - points[0].v.y;
+                double first = (dir == DIR::VER)? points[i].visible[d].first.v.x - points[0].v.x:
+                                            points[i].visible[d].first.v.y - points[0].v.y;
+                double second = (dir == DIR::VER)? points[i].visible[d].second.v.x - points[0].v.x:
+                                            points[i].visible[d].second.v.y - points[0].v.y;
+                if (std::abs(first) > EPS && first * discriminant < 0)
+                    points[i].visible[d].first = p;
+                if (std::abs(second) > EPS && second * discriminant < 0)
+                    points[i].visible[d].second = p;
+            } 
+        }
+    }
     int slice = points[0].index;
     for (auto &&point : points)
-        point.index = (point.index + n - slice) % n;
-    for (auto &&line : sliceLines)
     {
-        line.first.index = (line.first.index + n - slice) % n;
-        line.second.index = (line.second.index + n - slice) % n;
+        point.index = (point.index + n - slice) % n;
+        for (int dir = 0; dir < 3; dir++)
+        {
+            point.visible[dir].first.index = (point.visible[dir].first.index + n - slice) % n;
+            point.visible[dir].second.index = (point.visible[dir].second.index + n - slice) % n;
+        }
     }
     if (verDiv.first.index != -1)
     {
@@ -356,19 +466,19 @@ void Polygon::renumbering(int n, bool horizontal)
     }
 }
 
-vector<Polygon> Polygon::divide(bool horizontal)
+vector<Polygon> Polygon::divide(DIR dir)
 {
     int n = static_cast<int>(points.size());
     int temp = 0;
-    PPair &div = (horizontal)? horDiv:verDiv;
-    for (auto &&line : sliceLines)
+    PPair &div = (dir == HOR)? horDiv:verDiv;
+    for (auto &&point : points)
     {
-        int min = std::min(line.first.index, line.second.index);
-        int max = std::max(line.first.index, line.second.index);
+        int min = std::min(point.visible[dir].first.index, point.visible[dir].second.index);
+        int max = std::max(point.visible[dir].first.index, point.visible[dir].second.index);
         int dist = std::min(max - min, min + n - max);
         if (dist > temp)
         {
-            div = line;
+            div = point.visible[dir];
             temp = dist;
         } 
     }
@@ -411,23 +521,8 @@ vector<Polygon> Polygon::divide(bool horizontal)
         touchedPrev = touched || (temp == div.second.index);
         temp = (temp + 1) % n;
     } while (temp != start);
-    for (auto &&line : sliceLines)
-    {
-        bool firstFront = horizontal? (line.first.v.y - div.first.v.y)*(line.first.v.y - points[div.first.index].v.y) > 0:
-                                    (line.first.v.x - div.first.v.x)*(line.first.v.x - points[div.first.index].v.x) > 0;
-        bool secondFront = horizontal? (line.second.v.y - div.second.v.y)*(line.second.v.y - points[div.second.index].v.y) > 0:
-                                    (line.second.v.x - div.second.v.x)*(line.second.v.x - points[div.second.index].v.x) > 0;
-        if (line == div)
-            continue;
-        if (line.first.index != div.first.index && line.second.index != div.second.index)
-            polygons[segToPol[(line.first.index + 1) % n]].sliceLines.push_back(line);
-        else if ((line.first.index == div.first.index && firstFront) || (line.second.index == div.second.index && !secondFront))
-            polygons.front().sliceLines.push_back(line);
-        else
-            polygons.back().sliceLines.push_back(line);
-    }
     //divide verDiv
-    if (horizontal)
+    if (dir == HOR)
     {
         vector<Polygon> newPolygons;
         Vector r;
@@ -465,13 +560,12 @@ vector<Polygon> Polygon::divide(bool horizontal)
         polygons = newPolygons;
     }
     for (auto &&polygon : polygons)
-        polygon.renumbering(n, horizontal);
+        polygon.renumbering(n, dir);
     return polygons;
 }
 
 void Polygon::cutting(bool horizontal)
 {
-    sliceLines.clear();
     vector<Vector> points;
 }
 
@@ -486,7 +580,7 @@ vector<Vector> Polygon::compute()
     }
     //divide
     vector<Vector> triangle;
-    for (auto &&polygon : divide(false))
+    for (auto &&polygon : divide(DIR::VER))
     {
         vector<Vector> temp = polygon.compute();
         if (ar < area(temp))
@@ -503,21 +597,30 @@ vector<Vector> Polygon::compute()
 
 ostream& operator<<(ostream& os, const Polygon& polygon)
 {
-    cout << "Points" << endl;
     for (auto &&point : polygon.points)
     {
-        cout << "Index:" << point.index << " x:" << point.v.x << " y:" << point.v.y << endl;
-    }
-    cout << "SliceLines" << endl;
-    int count = 0;
-    for (auto &&line : polygon.sliceLines)
-    {
-        cout << "pair" << count << endl;
-		cout << "First index:"  << line.first.index << endl;
-		cout << "First vector:"  << line.first.v.x << " " << line.first.v.y << endl;
-		cout << "Second index:"  << line.second.index << endl;
-		cout << "Second vector:"  << line.second.v.x << " " << line.second.v.y << endl;
-        count++;
+        cout << "<<" << "Index:" << point.index << " x:" << point.v.x << " y:" << point.v.y << ">>" << endl;
+        for (size_t dir = 0; dir < 3; dir++)
+        {
+            switch (dir)
+            {
+            case DIR::VER:
+                cout << "Vertical" << endl;
+                break;
+            case DIR::HOR:
+                cout << "Horizontal" << endl;
+                break;
+            case DIR::DIAG:
+                cout << "Diagonal" << endl;
+                break;
+            default:
+                break;
+            }
+            cout << "First index:"  << point.visible[dir].first.index << endl;
+            cout << "First vector:"  << point.visible[dir].first.v.x << " " << point.visible[dir].first.v.y << endl;
+            cout << "Second index:"  << point.visible[dir].second.index << endl;
+            cout << "Second vector:"  << point.visible[dir].second.v.x << " " << point.visible[dir].second.v.y << endl;
+        }
     }
     return os;
 }

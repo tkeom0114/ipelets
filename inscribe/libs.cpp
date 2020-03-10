@@ -30,3 +30,8 @@ double area(vector<Vector> const &polygon)
     }
     return ipe::abs(area);
 }
+
+double cross(const Vector &a, const Vector &b)
+{
+    return a.x*b.y - a.y*b.x;
+}

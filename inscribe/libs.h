@@ -15,5 +15,6 @@ using namespace std;
 
 void setVectors(vector<Point> &polygon, Curve const *curve);
 double area(vector<Vector> const &polygon);
+double cross(const Vector &a, const Vector &b);
 
 #endif

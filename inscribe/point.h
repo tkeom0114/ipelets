@@ -33,18 +33,20 @@ public:
     Point():index(-1),v(Vector(0.0, 0.0)){};
     bool operator<(const Point rhs) const;
     bool operator==(const Point rhs) const;
+    bool operator!=(const Point rhs) const;
+    friend pair<Point, Point> operator*(const Linear &l, const pair<Point, Point> &ppair);
 };
 
 typedef pair<Point, Point> PPair;
 class PointInfo: public Point
 {
 public:
-    array<PPair,3> visibie;
+    array<PPair, 3> visible;
 public:
     PointInfo(int _index, Vector _v):Point(_index, _v){};
     PointInfo(Point p):Point(p){};
 };
 bool compareIndex(Point const a, Point const b);
-Segment ppairToSeg(PPair ppair);
+Segment ppairToSeg(PPair &ppair);
 
 #endif

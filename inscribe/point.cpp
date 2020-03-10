@@ -29,12 +29,22 @@ bool Point::operator==(const Point rhs) const
     return this->v == rhs.v;
 }
 
+bool Point::operator!=(const Point rhs) const
+{
+    return !(*this == rhs);
+}
+
+PPair operator*(const Linear &l, const PPair &ppair)
+{
+    return PPair(Point(ppair.first.index, l * ppair.first.v), Point(ppair.second.index, l * ppair.second.v));
+}
+
 bool compareIndex(Point const a, Point const b)
 {
     return a.index < b.index;
 }
 
-Segment ppairToSeg(PPair ppair)
+Segment ppairToSeg(PPair &ppair)
 {
     return Segment(ppair.first.v, ppair.second.v);
 }
