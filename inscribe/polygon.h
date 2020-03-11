@@ -25,6 +25,7 @@ class Polygon
 private:
     static const array<Linear,3> trans;
     void renumbering(int n, DIR dir);
+    bool computeVisEach(IpeletHelper *helper, DIR dir);
 public:
     vector<PointInfo> points;
     vector<EPair> edgePairs;
@@ -36,7 +37,7 @@ public:
     ~Polygon();
     void setPoints(Curve const *curve);
     void transformPoints(Linear const &l);
-    bool computeVis(IpeletHelper *helper, DIR dir);
+    bool computeVis(IpeletHelper *helper);
     vector<Polygon> divide(DIR dir); //set Edge div in the function
     void cutting(bool horizontal);
     vector<Vector> compute();

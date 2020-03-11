@@ -27,10 +27,13 @@ void Polygon::setPoints(Curve const *curve)
     points.clear();
     PointInfo p(0,curve->segment(0).cp(0));
 	points.push_back(p);
+    cout << "Input" << endl;//debugging
+    cout << "Index 0 " << p.v.x << " " << p.v.y << endl;//debugging
 	for (int i = 0; i < curve->countSegments(); i++)
 	{
         p.index = i + 1; p.v = curve->segment(i).last();
 		points.push_back(p);
+        cout << "Index " << p.index << " " << p.v.x << " " << p.v.y << endl;//debugging
 	}
 }
 
@@ -55,7 +58,7 @@ vector<EPair> surroundPairs(Point &q, set<EPair, Compare> &intersectPairs)
 /**
  * TODO: erase edgePair if ipelet is complete
  */
-bool Polygon::computeVis(IpeletHelper *helper, DIR dir)
+bool Polygon::computeVisEach(IpeletHelper *helper, DIR dir)
 {
     transformPoints(trans[dir]);
     edgePairs.clear();
@@ -204,7 +207,7 @@ bool Polygon::computeVis(IpeletHelper *helper, DIR dir)
 					}
 					else if (dist == static_cast<int>(n - 1))
 					{
-                        prevEdge = &polygonEdges[q->index];
+                        prevEdge = &polygonEdges[(q->index + n -1) % n];
 					}
 					else
 					{
@@ -348,6 +351,16 @@ bool Polygon::computeVis(IpeletHelper *helper, DIR dir)
     }
     sort(points.begin(), points.end(), compareIndex);
     transformPoints(trans[dir].inverse());
+    return true;
+}
+
+bool Polygon::computeVis(IpeletHelper *helper)
+{
+    for (int dir = 0; dir < 3; dir++)
+    {
+        if (!computeVisEach(helper, DIR(dir))) return false;
+    }
+    
     return true;
 }
 
@@ -567,6 +580,7 @@ vector<Polygon> Polygon::divide(DIR dir)
 void Polygon::cutting(bool horizontal)
 {
     vector<Vector> points;
+
 }
 
 

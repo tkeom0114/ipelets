@@ -51,10 +51,10 @@ bool Edge::operator<(const Edge &rhs) const
         Vector va(a, 0.0), vb(b, 0.0), dir(0.0, 1.0);
         Line la(va, dir), lb(vb, dir);
         Vector lhsa, lhsb, rhsa, rhsb;
-        if (!seg.intersects(la, lhsa)) cout << "Error!" << endl;
-        if (!seg.intersects(lb, lhsb)) cout << "Error!" << endl;
-        if (!rhs.seg.intersects(la, rhsa)) cout << "Error!" << endl;
-        if (!rhs.seg.intersects(lb, rhsb)) cout << "Error!" << endl;
+        if (!seg.intersects(la, lhsa)) cout << "Error1!" << endl;
+        if (!seg.intersects(lb, lhsb)) cout << "Error2!" << endl;
+        if (!rhs.seg.intersects(la, rhsa)) cout << "Error3!" << endl;
+        if (!rhs.seg.intersects(lb, rhsb)) cout << "Error4!" << endl;
         return (lhsa.y + EPS < rhsa.y && lhsb.y < rhsb.y + EPS) || (lhsa.y < rhsa.y +EPS && lhsb.y + EPS < rhsb.y);
     }
 }

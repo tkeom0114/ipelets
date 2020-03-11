@@ -91,9 +91,7 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	//linear transformation of the polygon
 	//polygon.transformPoints(m);
 
-	if (!polygon.computeVis(helper, DIR::VER)) return false;
-	if (!polygon.computeVis(helper, DIR::HOR)) return false;
-	if (!polygon.computeVis(helper, DIR::DIAG)) return false;
+	if (!polygon.computeVis(helper)) return false;
 	cout << "Input polygon" << endl;
 	cout << polygon << endl;
 	int count = 0;
