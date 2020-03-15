@@ -45,3 +45,4 @@
 
 # Ignore debug files
 inscribe_debug/*
+graham/*

@@ -48,3 +48,9 @@ Segment ppairToSeg(PPair &ppair)
 {
     return Segment(ppair.first.v, ppair.second.v);
 }
+
+Segment ppairToSeg(PIPair &ppair)
+{
+    return Segment(ppair.first.v, ppair.second.v);
+}
+

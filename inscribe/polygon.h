@@ -25,12 +25,13 @@ class Polygon
 private:
     static const array<Linear,3> trans;
     void renumbering(int n, DIR dir);
+    void computeVisPoint(bool first, DIR dir, DIR d);
     bool computeVisEach(IpeletHelper *helper, DIR dir);
 public:
     vector<PointInfo> points;
     vector<EPair> edgePairs;
-    PPair verDiv;
-    PPair horDiv;
+    PIPair verDiv;
+    PIPair horDiv;
 public:
     Polygon(vector<PointInfo> _points, vector<EPair> _edgePairs);
     Polygon();

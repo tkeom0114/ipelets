@@ -92,8 +92,6 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 	//polygon.transformPoints(m);
 
 	if (!polygon.computeVis(helper)) return false;
-	cout << "Input polygon" << endl;
-	cout << polygon << endl;
 	int count = 0;
 	for (auto &&poly : polygon.divide(DIR::VER))
 	{
@@ -101,6 +99,8 @@ bool InscribeIpelet::run(int, IpeletData *data, IpeletHelper *helper)
 		cout << poly << endl;
 		count++;
 	}
+	cout << "Input polygon" << endl;
+	cout << polygon << endl;
 	//debugging
 	/*for (size_t i = 0; i < polygon.sliceLines.size(); i++)
 	{

@@ -45,8 +45,12 @@ public:
 public:
     PointInfo(int _index, Vector _v):Point(_index, _v){};
     PointInfo(Point p):Point(p){};
+    PointInfo():Point(){};
 };
+
+typedef pair<PointInfo, PointInfo> PIPair;
 bool compareIndex(Point const a, Point const b);
 Segment ppairToSeg(PPair &ppair);
+Segment ppairToSeg(PIPair &ppair);
 
 #endif
